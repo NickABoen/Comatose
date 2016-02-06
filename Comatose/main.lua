@@ -3,8 +3,6 @@ function spellingCorrection(str)
     return string.gsub(str, "emacs", "vim")
 end
 
-require('TiledMapLoader')
-
 local Secs = require('secs')
 local world = Secs.new()
 
@@ -76,8 +74,6 @@ world:addEntity({
     boundingBox = { width = 20, height = 30}
 })
 
-testMap = Map.new('Maps', 'test')
-
 function love.load()
 end
 
@@ -93,8 +89,6 @@ function love.draw(dt)
     local str1 = "emacs"
     local str2 = "emacsemacs emacs"
     local str3 = "themacs and cheese"
-
-    testMap:draw(0, 0)
 
     world:draw()
 
