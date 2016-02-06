@@ -41,7 +41,7 @@ world:addComponent("player", {state = player_states.neutral})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 world:addComponent("player", {state = player_states.neutral})
-world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10) })
+world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
 world:addComponent("collideWorld", {type = {}, world = HC.new() })
 
 local function typeMatch(set, types)
@@ -62,10 +62,7 @@ world:addSystem("collide",
           if typeMatch(collider.collideWorld.type, entity.collideObject.type) then
             --print("found collision")
             --move them away by the current vector
-            local position = entity.position
-            local vec = entity.velocity.vec
-            local speed = entity.velocity.currentSpeed
-            position.pos = position.pos - (vec * speed * dt)
+            entity.collideObject.event(entity, collider, dt)
           end
         end
       end
@@ -166,7 +163,16 @@ local player = world:addEntity({
     hasInput = {},
     velocity = {},
     player = {},
-    collideObject = {type = {"actor", "player"}},
+    collideObject = {
+      type = {"actor", "player"},
+      event = function(entity, collider, dt)
+        print("collide!")
+        local position = entity.position
+        local vec = entity.velocity.vec
+        local speed = entity.velocity.currentSpeed
+        position.pos = position.pos - (vec * speed * dt)
+      end
+    },
     renderable = {
       z = 0.5,
       draw = function(player)
