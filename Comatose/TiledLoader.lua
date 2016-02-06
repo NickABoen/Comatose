@@ -1,5 +1,7 @@
-Map = {}
-Map.__index = Map
+--HC = require 'HC'
+
+Loader = {}
+Loader.__index = Loader
 
 local function loadTilesets(dir, out)
   for i=1,#out.map.tilesets do
@@ -33,7 +35,7 @@ local function makeBatch(batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw, tsh)
     for y=0, mh-1 do
       if data[loc] ~= 0 then
         local ix, iy = convertNum(data[loc], tsw, tsw, spacing, tx, ty)
-        print(tsw, tsw, ix, iy, tx, ty, sx, sy)
+        --print(tsw, tsw, ix, iy, tx, ty, sx, sy)
         local q = love.graphics.newQuad(ix, iy, tx, ty, sx, sy)
         ix, iy = convertNum(loc, mw, mh, 0, tx, ty)
         batch:add(q, ix, iy)
@@ -53,7 +55,7 @@ local function createBatches(out)
     layer.batch = love.graphics.newSpriteBatch(img, maxSprites, "static")
     layer.name = mlayer.name
     local loc = 1
-    print(mlayer.data)
+    --print(mlayer.data)
     local data = mlayer.data
     local tx = tset.tilewidth
     local ty = tset.tileheight
@@ -72,7 +74,7 @@ local function createBatches(out)
   end
 end
 
-function Map.new(dir, path)
+function Loader.new(dir, path)
   local out = {map = require(dir .. "." .. path)}
   out.tilesets = {}
   out.layers = {}
@@ -80,11 +82,13 @@ function Map.new(dir, path)
   out.mapheight = out.map.height
   loadTilesets(dir, out)
   createBatches(out)
-  return setmetatable(out, Map)
+  return setmetatable(out, Loader)
 end
 
-function Map:draw(...)
+function Loader:draw(...)
   for i=1, #self.layers do
     love.graphics.draw(self.layers[i].batch, ...)
   end
 end
+
+return Loader

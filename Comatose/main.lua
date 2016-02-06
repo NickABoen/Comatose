@@ -3,6 +3,7 @@ function spellingCorrection(str)
     return string.gsub(str, "emacs", "vim")
 end
 
+local Loader = require('TiledLoader')
 local Secs = require('secs')
 local world = Secs.new()
 
@@ -10,7 +11,7 @@ local world = Secs.new()
 world:addComponent("position", {x = 0, y = 0})
 world:addComponent("boundingBox", {width = 10, height = 10})
 world:addComponent("hasInput", {})
-world:addComponent("renderable",{})
+world:addComponent("renderable",{z = 0, draw = function() end})
 
 -- adding an input system
 -- this system will handle processing user input
@@ -48,14 +49,15 @@ world:addSystem("input",{
 -- this system will handle rendering rectangles
 world:addSystem("render", {
     draw = function(self)
-        for entity in pairs(world:query("renderable position boundingBox")) do
-            love.graphics.rectangle(
-                "fill",
-                entity.position.x,
-                entity.position.y,
-                entity.boundingBox.width,
-                entity.boundingBox.height
-            )
+        --get the renderables
+        local rens = world:query("renderable")
+        --sort them
+        table.sort(rens, function(r1, r2)
+          return r1.z < r2.z
+        end)
+        --now draw all of them
+        for entity in pairs(rens) do
+          entity.renderable.draw(entity)
         end
     end
 })
@@ -65,16 +67,31 @@ local player = world:addEntity({
     position = {x = 100, y = 100},
     boundingBox = {},
     hasInput = {},
-    renderable = {}
+    renderable = {
+      z = 0.5,
+      draw = function(player)
+        love.graphics.rectangle(
+            "fill",
+            player.position.x,
+            player.position.y,
+            player.boundingBox.width,
+            player.boundingBox.height
+        )
+      end
+    }
 })
 
--- create a large, generic rectangle entity at position (200, 0)
-world:addEntity({
-    position = { x = 200},
-    boundingBox = { width = 20, height = 30}
-})
+local map = Loader.new('Maps', 'testmap')
+print(map.draw)
+--add the map
+world:addEntity({renderable = {
+  draw = function(entity)
+    map:draw()
+  end
+}})
 
 function love.load()
+
 end
 
 function love.update(dt)
