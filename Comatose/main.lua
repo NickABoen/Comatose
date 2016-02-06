@@ -4,6 +4,7 @@
 local debug = true
 
 vector = require('hump/vector')
+local Loader = require('TiledLoader')
 local Secs = require('secs')
 local world = Secs.new()
 require 'trace'
@@ -37,8 +38,8 @@ world:addComponent("velocity", { maxSpeed = 100, currentSpeed = 100, vec = vecto
 world:addComponent("boundingBox", {width = 10, height = 10})
 world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
-world:addComponent("renderable",{})
 world:addComponent("debug",{ name = ''})
+world:addComponent("renderable",{z = 0, draw = function() end})
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
@@ -94,7 +95,6 @@ world:addSystem("input",{
 
 
             keys[key.key.id] = key
-
         end
 
         for entity in pairs(world:query("hasInput velocity")) do
@@ -155,14 +155,20 @@ world:addSystem("movement", {
 -- this system will handle rendering rectangles
 world:addSystem("render", {
     draw = function(self)
-        for entity in pairs(world:query("renderable position boundingBox debug")) do
-            love.graphics.rectangle(
-                "fill",
-                entity.position.pos.x,
-                entity.position.pos.y,
-                entity.boundingBox.width,
-                entity.boundingBox.height
-            )
+        --get the renderables
+        local rens = {}
+        for k in pairs(world:query("renderable")) do
+          print(k)
+          table.insert(rens, k)
+        end
+        --sort them
+        table.sort(rens, function(r1, r2)
+          return r1.renderable.z < r2.renderable.z
+        end)
+        print(#rens)
+        --now draw all of them
+        for i, entity in ipairs(rens) do
+          entity.renderable.draw(entity)
         end
     end
 })
@@ -170,16 +176,36 @@ world:addSystem("render", {
 -- create a player entity at position (100, 100)
 local player = world:addEntity({
     position = {pos = vector(100,100)},
+    velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
     hasInput = {},
-    renderable = {},
-    debug = {name = 'player'},
-    player = {},
-    velocity = {maxSpeed = 100, currentSpeed = 100}
+    player = {state = player_states.neutral},
+    renderable = {
+      z = 0.5,
+      draw = function(player)
+        love.graphics.rectangle(
+            "fill",
+            player.position.pos.x,
+            player.position.pos.y,
+            player.boundingBox.width,
+            player.boundingBox.height
+        )
+      end
+    }
 })
 
+local layers, tiles, boxes = Loader.load('Maps', 'testmap')
+--add the map
+world:addEntity({renderable = {
+  draw = function(entity)
+    for i, layer in ipairs(layers) do
+      layer:draw()
+    end
+  end
+}})
+
 function love.load()
-    printNotice('Trace system online.', trace.styles.green)
+  printNotice('Trace system online.', trace.styles.green)
 end
 
 function love.update(dt)

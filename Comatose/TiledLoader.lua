@@ -1,5 +1,23 @@
-Map = {}
-Map.__index = Map
+HC = require 'HC'
+
+Loader = {}
+Loader.__index = Loader
+
+Tile = {}
+Tile.__index = Tile
+
+function Tile:draw(...)
+  love.graphics.draw(self.image, self.quad, ...)
+end
+
+local function convertNum(num, width, height, spacing, px, py)
+  num = num - 1
+  local y = math.floor(num / width)
+  local x = num % width
+  local ix = spacing * x + px * x
+  local iy = spacing * y + py * y
+  return ix, iy
+end
 
 local function loadTilesets(dir, out)
   for i=1,#out.map.tilesets do
@@ -15,32 +33,46 @@ local function loadTilesets(dir, out)
     image.tileswidth = math.ceil(tset.imagewidth / (tset.spacing + tset.tilewidth))
     image.tilesheight = math.ceil(tset.imageheight / (tset.spacing + tset.tileheight))
     table.insert(out.tilesets, image)
+    out.tilecollide = {}
+    for j, tile in ipairs(out.map.tilesets[i].tiles) do
+      print(j, tile)
+      local obj = tile.objectGroup.objects[1]
+      out.tileboxs[tile.id] = HC.rectangle(obj.x,obj.y,obj.width,obj.height)
+      print(tile.id, out.tileboxs[tile.id])
+    end
+    for j=1, tset.tilecount do
+      local x, y = convertNum(j, image.tileswidth, image.tilesheight, image.spacing, image.tilewidth, image.tileheight)
+      local q = love.graphics.newQuad(x, y, image.tilewidth, image.tileheight, image.width, image.height)
+      table.insert(out.tiles, {quad = q, image = image.image}) --insert a new tile
+    end
   end
 end
 
-local function convertNum(num, width, height, spacing, px, py)
-  num = num - 1
-  local y = math.floor(num / width)
-  local x = num % width
-  local ix = spacing * x + px * x
-  local iy = spacing * y + py * y
-  return ix, iy
+local function copyRect(hbox)
+  return HC.rectangle(hbox:bbox())
 end
 
-local function makeBatch(batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw, tsh)
+local function makeBatch(out, batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw, tsh)
   local loc = 1
+  local hboxs = {}
   for x=0, mw-1 do
     for y=0, mh-1 do
       if data[loc] ~= 0 then
         local ix, iy = convertNum(data[loc], tsw, tsw, spacing, tx, ty)
-        print(tsw, tsw, ix, iy, tx, ty, sx, sy)
+        --print(tsw, tsw, ix, iy, tx, ty, sx, sy)
         local q = love.graphics.newQuad(ix, iy, tx, ty, sx, sy)
         ix, iy = convertNum(loc, mw, mh, 0, tx, ty)
+        if out.tileboxs[data[loc]] then
+          local hbox = copyRect(out.tileboxs[data[loc]])
+          hbox:move(ix, iy)
+          table.insert(hboxs, hbox)
+        end
         batch:add(q, ix, iy)
       end
       loc = loc + 1
     end
   end
+  return hboxs
 end
 
 local function createBatches(out)
@@ -53,14 +85,14 @@ local function createBatches(out)
     layer.batch = love.graphics.newSpriteBatch(img, maxSprites, "static")
     layer.name = mlayer.name
     local loc = 1
-    print(mlayer.data)
     local data = mlayer.data
     local tx = tset.tilewidth
     local ty = tset.tileheight
     local sx = tset.width
     local sy = tset.height
     local spacing = tset.spacing
-    makeBatch(
+    local hboxs = makeBatch(
+      out,
       layer.batch,
       data,
       out.mapwidth, out.mapheight,
@@ -68,23 +100,36 @@ local function createBatches(out)
       sx, sy,
       spacing,
       tset.tileswidth, tset.tilesheight)
+    for j, box in ipairs(hboxs) do table.insert(out.boxes, box) end
     table.insert(out.layers, layer)
   end
 end
 
-function Map.new(dir, path)
+Layer = {}
+Layer.__index = Layer
+
+function Layer:draw(...)
+  love.graphics.draw(self.batch, ...)
+end
+
+function Loader.load(dir, path)
   local out = {map = require(dir .. "." .. path)}
   out.tilesets = {}
   out.layers = {}
+  out.boxes = {}
+  out.tiles = {}
+  out.tileboxs = {}
   out.mapwidth = out.map.width
   out.mapheight = out.map.height
   loadTilesets(dir, out)
   createBatches(out)
-  return setmetatable(out, Map)
+  for i,layer in ipairs(out.layers) do
+    setmetatable(layer, Layer)
+  end
+  for i,tile in ipairs(out.tiles) do
+    setmetatable(tile, Tile)
+  end
+  return out.layers, out.tiles, out.boxes
 end
 
-function Map:draw(...)
-  for i=1, #self.layers do
-    love.graphics.draw(self.layers[i].batch, ...)
-  end
-end
+return Loader
