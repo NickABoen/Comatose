@@ -50,13 +50,18 @@ world:addSystem("input",{
 world:addSystem("render", {
     draw = function(self)
         --get the renderables
-        local rens = world:query("renderable")
+        local rens = {}
+        for k in pairs(world:query("renderable")) do
+          print(k)
+          table.insert(rens, k)
+        end
         --sort them
         table.sort(rens, function(r1, r2)
-          return r1.z < r2.z
+          return r1.renderable.z < r2.renderable.z
         end)
+        print(#rens)
         --now draw all of them
-        for entity in pairs(rens) do
+        for i, entity in ipairs(rens) do
           entity.renderable.draw(entity)
         end
     end
@@ -81,12 +86,13 @@ local player = world:addEntity({
     }
 })
 
-local map = Loader.new('Maps', 'testmap')
-print(map.draw)
+local layers, tiles, boxes = Loader.load('Maps', 'testmap')
 --add the map
 world:addEntity({renderable = {
   draw = function(entity)
-    map:draw()
+    for i, layer in ipairs(layers) do
+      layer:draw()
+    end
   end
 }})
 
