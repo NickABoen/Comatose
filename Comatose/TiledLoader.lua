@@ -34,11 +34,13 @@ local function loadTilesets(dir, out)
     image.tilesheight = math.ceil(tset.imageheight / (tset.spacing + tset.tileheight))
     table.insert(out.tilesets, image)
     out.tilecollide = {}
+    print(#out.map.tilesets[i].tiles)
     for j, tile in ipairs(out.map.tilesets[i].tiles) do
-      print(j, tile)
+      --print(j, tile)
       local obj = tile.objectGroup.objects[1]
-      out.tileboxs[tile.id] = HC.rectangle(obj.x,obj.y,obj.width,obj.height)
-      print(tile.id, out.tileboxs[tile.id])
+      print("added", tile.id)
+      out.tileboxs[tile.id + 1] = HC.rectangle(obj.x,obj.y,obj.width,obj.height)
+      --print(tile.id, out.tileboxs[tile.id])
     end
     for j=1, tset.tilecount do
       local x, y = convertNum(j, image.tileswidth, image.tilesheight, image.spacing, image.tilewidth, image.tileheight)
@@ -49,7 +51,8 @@ local function loadTilesets(dir, out)
 end
 
 local function copyRect(hbox)
-  return HC.rectangle(hbox:bbox())
+  local x, y, x2, y2 = hbox:bbox()
+  return HC.rectangle(x, y, x2 - x, y2 - y)
 end
 
 local function makeBatch(out, batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw, tsh)
@@ -63,7 +66,9 @@ local function makeBatch(out, batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw,
         local q = love.graphics.newQuad(ix, iy, tx, ty, sx, sy)
         ix, iy = convertNum(loc, mw, mh, 0, tx, ty)
         if out.tileboxs[data[loc]] then
+          print("adding to hboxs", data[loc], ix, iy)
           local hbox = copyRect(out.tileboxs[data[loc]])
+          local bx, by, bx2, by2 = hbox:bbox()
           hbox:move(ix, iy)
           table.insert(hboxs, hbox)
         end
@@ -72,6 +77,7 @@ local function makeBatch(out, batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw,
       loc = loc + 1
     end
   end
+  print("hbox", #hboxs)
   return hboxs
 end
 
@@ -100,7 +106,7 @@ local function createBatches(out)
       sx, sy,
       spacing,
       tset.tileswidth, tset.tilesheight)
-    for j, box in ipairs(hboxs) do table.insert(out.boxes, box) end
+    for k, box in pairs(hboxs) do table.insert(out.boxes, box) end
     table.insert(out.layers, layer)
   end
 end
