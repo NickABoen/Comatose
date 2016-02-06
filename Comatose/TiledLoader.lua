@@ -34,11 +34,11 @@ local function loadTilesets(dir, out)
     image.tilesheight = math.ceil(tset.imageheight / (tset.spacing + tset.tileheight))
     table.insert(out.tilesets, image)
     out.tilecollide = {}
-    print(#out.map.tilesets[i].tiles)
+    --print(#out.map.tilesets[i].tiles)
     for j, tile in ipairs(out.map.tilesets[i].tiles) do
       --print(j, tile)
       local obj = tile.objectGroup.objects[1]
-      print("added", tile.id)
+      --print("added", tile.id)
       out.tileboxs[tile.id + 1] = HC.rectangle(obj.x,obj.y,obj.width,obj.height)
       --print(tile.id, out.tileboxs[tile.id])
     end
@@ -66,7 +66,7 @@ local function makeBatch(out, batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw,
         local q = love.graphics.newQuad(ix, iy, tx, ty, sx, sy)
         ix, iy = convertNum(loc, mw, mh, 0, tx, ty)
         if out.tileboxs[data[loc]] then
-          print("adding to hboxs", data[loc], ix, iy)
+          --print("adding to hboxs", data[loc], ix, iy)
           local hbox = copyRect(out.tileboxs[data[loc]])
           local bx, by, bx2, by2 = hbox:bbox()
           hbox:move(ix, iy)
@@ -77,7 +77,7 @@ local function makeBatch(out, batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw,
       loc = loc + 1
     end
   end
-  print("hbox", #hboxs)
+  --print("hbox", #hboxs)
   return hboxs
 end
 

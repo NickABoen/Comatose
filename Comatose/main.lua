@@ -42,10 +42,10 @@ world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 world:addComponent("player", {state = player_states.neutral})
 world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
-world:addComponent("collideWorld", {type = {}, world = HC.new() })
+world:addComponent("collideWorld", {type = {}, world = HC.new(), objects = {}})
 
 local function typeMatch(set, types)
-    for k, v in ipairs(types) do
+    for k, v in pairs(types) do
       if set[v] then return true end
     end
     return false
@@ -62,7 +62,7 @@ world:addSystem("collide",
           if typeMatch(collider.collideWorld.type, entity.collideObject.type) then
             --print("found collision")
             --move them away by the current vector
-            entity.collideObject.event(entity, collider, dt)
+            entity.collideObject.event(entity, collider, collider.collideWorld.objects[shape], dt)
           end
         end
       end
@@ -156,6 +156,31 @@ world:addSystem("render", {
     end
 })
 
+local witch = world:addEntity({
+  position = {pos = vector(300,300)},
+  boundingBox = {},
+  velocity = {},
+  collideObject = {
+    type = {"actor", "witch"},
+    shape = HC.rectangle(300, 300, 10, 10),
+    event = function(entity, collider, obj, dt)
+      print("the witch hit you!")
+    end
+  },
+  renderable = {
+    z = 0.5,
+    draw = function(player)
+      love.graphics.rectangle(
+          "fill",
+          player.position.pos.x,
+          player.position.pos.y,
+          player.boundingBox.width,
+          player.boundingBox.height
+      )
+    end
+  }
+})
+
 -- create a player entity at position (100, 100)
 local player = world:addEntity({
     position = {pos = vector(200,200)},
@@ -165,7 +190,9 @@ local player = world:addEntity({
     player = {},
     collideObject = {
       type = {"actor", "player"},
-      event = function(entity, collider, dt)
+      shape = HC.rectangle(200, 200, 10, 10),
+      event = function(entity, collider, obj, dt)
+        if obj then print("you hit the witch!") end
         print("collide!")
         local position = entity.position
         local vec = entity.velocity.vec
@@ -196,11 +223,27 @@ world:addEntity({renderable = {
     end
   end
 }})
-print(boxes, #boxes)
+--print(boxes, #boxes)
 
 local mapBox = world:addEntity({collideWorld = {
-  type = {actor = true},
+  type = {player=true},
+  objects = {[witch.collideObject.shape] = witch}
 }})
+
+function addInteractable(collider, obj)
+  collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(obj.collideObject.shape)
+end
+
+function addShape(collider, shape)
+  --collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(shape)
+end
+
+for k, box in pairs(boxes) do
+  addShape(mapBox, box)
+end
+addInteractable(mapBox, witch)
 
 if debug then
   world:addEntity({renderable = {
@@ -219,10 +262,6 @@ end
 
 function love.load()
   printNotice('Trace system online.', trace.styles.green)
-  for k, box in pairs(boxes) do
-    print(box:bbox())
-    mapBox.collideWorld.world:register(box)
-  end
 end
 
 function love.update(dt)
