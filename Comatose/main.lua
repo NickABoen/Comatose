@@ -29,6 +29,7 @@ end
 
 -- useful "enums"
 local player_states = {neutral = "neutral", rolling = "rolling"}
+local key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
 
 -- create the components
 world:addComponent("position", { pos = vector(0,0)})
@@ -39,46 +40,97 @@ world:addComponent("player", {state = player_states.neutral})
 world:addComponent("renderable",{})
 world:addComponent("debug",{ name = ''})
 
+--For this component 'was' and 'is' should only ever be up or down while
+--state represents a 4 state button with up, pressed, down, and released
+world:addComponent("key", { id = "something", was = key_states.up, is = key_states.up, state = key_states.up})
+
+-- create key entities
+local upKey = world:addEntity({
+    key = {id = 'up'}
+})
+local leftKey = world:addEntity({
+    key = {id = 'left'}
+})
+local downKey = world:addEntity({
+    key = {id = 'down'}
+})
+local rightKey = world:addEntity({
+    key = {id = 'right'}
+})
+local spaceKey = world:addEntity({
+    key = {id = 'space'}
+})
+local escapeKey = world:addEntity({
+    key = {id = 'escape'}
+})
+
 -- adding an input system
 -- this system will handle processing user input
 world:addSystem("input",{
     update = function(self, dt)
+        local keys = {}
+
+        for key in pairs(world:query("key"))do
+            -- update old value
+            key.key.was = key.key.is
+
+            -- set current key
+            if love.keyboard.isDown(key.key.id) then
+                key.key.is = key_states.down
+            else
+                key.key.is = key_states.up
+            end
+
+            -- update state
+            if (key.key.was == key_states.up) and (key.key.is == key_states.up) then --key hasn't been touched and is up
+                key.key.state = key_states.up
+            elseif (key.key.was == key_states.up) and (key.key.is == key_states.down) then -- key has just been pressed
+                key.key.state = key_states.pressed
+            elseif (key.key.was == key_states.down) and (key.key.is == key_states.up) then -- key has just been released
+                key.key.state = key_states.released
+            elseif (key.key.was == key_states.down) and (key.key.is == key_states.down) then --key is being held down
+                key.key.state = key_states.down
+            end
+
+
+            keys[key.key.id] = key
+
+        end
+
         for entity in pairs(world:query("hasInput velocity")) do
             local velocity = entity.velocity
             local currentSpeed = entity.velocity.currentSpeed
             local player = entity.player
 
-            if love.keyboard.isDown("escape") then
+            if keys['escape'].key.state == key_states.released then
                 love.event.quit()
             end
 
             if player.state == player_states.neutral then
-            
-                if love.keyboard.isDown("up") then
+
+                if (keys['up'].key.state == key_states.pressed) or (keys['up'].key.state == key_states.down) then
                     velocity.vec.y = -1
-                elseif love.keyboard.isDown("down") then
+                elseif (keys['down'].key.state == key_states.pressed) or (keys['down'].key.state == key_states.down) then
                     velocity.vec.y = 1
                 else
                     velocity.vec.y = 0
                 end
 
-                if love.keyboard.isDown("left") then
+                if (keys['left'].key.state == key_states.pressed) or (keys['left'].key.state == key_states.down) then
                     velocity.vec.x = -1
-                elseif love.keyboard.isDown("right") then
+                elseif (keys['right'].key.state == key_states.pressed) or (keys['right'].key.state == key_states.down) then
                     velocity.vec.x = 1
                 else
                     velocity.vec.x = 0
                 end
-
+            
                 velocity.vec = velocity.vec:normalized()
 
-                if love.keyboard.isDown("space") then
+                if keys['space'].key.state == key_states.pressed then
                     player.state = player_states.rolling
                 end
 
             elseif player.state == player_states.rolling then
-                -- the player should have no or limited actions in this state
-            elseif player.state == player_states.jumping then
                 -- the player should have no or limited actions in this state
             end
         end
@@ -131,10 +183,6 @@ function love.load()
 end
 
 function love.update(dt)
-    if love.keyboard.isDown('escape') then
-        love.event.push('quit')
-    end
-
     world:update(dt)
 end
 
