@@ -1,7 +1,7 @@
 --------------------------------------------------
 --                    Comatose                  --
 --------------------------------------------------
-local debug = true 
+local debug = true
 
 timer = require('hump/timer')
 Gamestate = require('hump/gamestate')
@@ -79,7 +79,7 @@ end
 -- useful "enums"
 player_states = {neutral = "neutral", rolling = "rolling"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
-boss_states = {preparing = 'preparing', telling = 'telling', attacking = 'attacking', 
+boss_states = {preparing = 'preparing', telling = 'telling', attacking = 'attacking',
                 idle = 'idle', transPhase = 'transPhase'}
 timer_states = {stop = 'stop', restart = 'restart'}
 witch_timers = {floatTimer = 1, stateTimer = 2}
@@ -132,5 +132,5 @@ function love.load()
   cam.smoother = Camera.smooth.linear(1000)
   --init the game states
   Gamestate.registerEvents()
-  Gamestate.switch(level_1_1)
+  Gamestate.switch(leadin)
 end
