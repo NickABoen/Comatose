@@ -105,7 +105,7 @@ world:addEntity({renderable = {
 }})
 
 local witch = world:addEntity({
-  position = {pos = vector(300,300)},
+  position = {pos = vector(600,600)},
   boundingBox = {},
   velocity = {},
   collideObject = {

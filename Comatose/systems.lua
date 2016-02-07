@@ -136,6 +136,10 @@ world:addSystem("movement", {
           local pos = entity.position.pos
           entity.collideObject.shape:moveTo(pos.x + bw/2, pos.y + bh/2)
         end
+        for entity in pairs(world:query("player")) do
+          printDebug("player moved cammera")
+          cam:lookAt(math.ceil(entity.position.pos.x), math.ceil(entity.position.pos.y))
+        end
     end
 })
 
@@ -146,14 +150,14 @@ world:addSystem("render", {
         --get the renderables
         local rens = {}
         for k in pairs(world:query("renderable")) do
-          print(k)
+          --print(k)
           table.insert(rens, k)
         end
         --sort them
         table.sort(rens, function(r1, r2)
           return r1.renderable.z < r2.renderable.z
         end)
-        print(#rens)
+        --print(#rens)
         --now draw all of them
         for i, entity in ipairs(rens) do
           entity.renderable.draw(entity)
