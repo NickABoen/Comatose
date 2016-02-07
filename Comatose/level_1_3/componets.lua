@@ -29,7 +29,6 @@ world:addComponent("action", {cost = 1, action = function() end})
 world:addComponent("food", {dhunger = 10, dglucose = 10})
 world:addComponent("candy", {})
 world:addComponent("toPerform", {})
-world:addComponent("animation", {})
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
@@ -64,26 +63,22 @@ local player = world:addEntity({
     hunger = {value = 90},
     insulin = {value = 10},
     health = {value = 1500},
-    position = {pos = vector(545,240)},
+    position = {pos = vector(200,200)},
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
-    animation = {},
     hasInput = {},
     player = {state = player_states.neutral},
     collideObject = {
       type = {"actor", "player"},
       event = function(entity, collider, obj, dt)
-        if obj and obj.candy then
-          entity.glucose.value = entity.glucose.value + obj.food.dglucose
-          entity.hunger.value = entity.hunger.value + obj.food.dhunger
-          world:delete(obj)
-        elseif not obj then
-          print("collide!")
-          local position = entity.position
-          local vec = entity.velocity.vec
-          local speed = entity.velocity.currentSpeed
-          position.pos = position.pos - (vec * speed * dt)
+        local position = entity.position
+        local vec = entity.velocity.vec
+        local speed = entity.velocity.currentSpeed
+        if obj then
+          world:attach(obj, {toPerform = {}})
+          obj.position.pos = obj.position.pos + 0.0005*entity.glucose.value*(obj.position.pos - position.pos)
         end
+        position.pos = position.pos - 0.3*(vec * speed * dt)
       end
     },
     renderable = {
@@ -95,7 +90,7 @@ local player = world:addEntity({
     }
 })
 
-local layers, tiles, boxes = Loader.load('Maps', 'leadin')
+local layers, tiles, boxes = Loader.load('Maps', 'level1_3')
 --add the map
 world:addEntity({renderable = {
   draw = function(entity)
@@ -105,25 +100,54 @@ world:addEntity({renderable = {
   end
 }})
 
-local candyIdTable = {8432, 8433, 8434, 8435, 8436}
-local candies = {}
-for i = 0, 30 do
-  local tile = tiles[candyIdTable[i % 5 + 1]]
-  candies[#candies + 1] = world:addEntity({
-    food = {
-      dhunger = 1,
-      dglucose = 3
+local furnitureIdTable = {6832, 6833, 6831, 6830, 7286}
+local furniture = {}
+for i = 1, 10 do
+  local tile = tiles[furnitureIdTable[i % 5 + 1]]
+  furniture[i] = world:addEntity({
+    action = {
+      cost = 0.1,
+      action = function(entity)
+        local e = entity
+        print(e)
+        entity.velocity.vec.x, entity.velocity.vec.y = player.velocity.vec.x, player.velocity.vec.y
+        Timer.after(0.15, function()
+          print("STOP!")
+          e.velocity.vec.x = 0
+          e.velocity.vec.y = 0
+        end)
+        --printDebug(Timer)
+        print("tried to push the box")
+      end
     },
-    candy = {},
+    velocity = {maxSpeed = 70, currentSpeed = 70, vec = vector(0,0)},
+    position = {pos = vector(i * 17, 240)},
     renderable = {
       z = 0.3,
       draw = function(entity)
-        tile:draw(i * 17, 240)
+        tile:draw(entity.position.pos.x,entity.position.pos.y)
       end
     },
     collideObject = {
-      type = {"object", "candy"},
-      shape = HC.rectangle(i * 17 + 4, 240 + 4, 8, 8)
+      type = {"object", "chairs"},
+      shape = HC.rectangle(i * 17+2, 240+2, 12, 12),
+      event = function(entity, collider, obj, dt)
+        local vol = entity.velocity
+        local vec = vol.vec
+        local speed = vol.currentSpeed
+        entity.position.pos = entity.position.pos - 0.3*speed * vec * dt
+        if obj then
+          vol = obj.velocity
+          vec = vol.vec
+          speed = vol.currentSpeed
+          obj.position.pos = obj.position.pos - speed * vec * dt
+          obj.position.pos = obj.position.pos + 0.05*(obj.position.pos - entity.position.pos)
+        else
+          entity.position.pos = entity.position.pos - 0.7*speed * vec * dt
+          entity.position.pos = entity.position.pos + 0.05*(player.position.pos - entity.position.pos)
+          print("did I get here?")
+        end
+      end
     }
   })
 end
@@ -134,12 +158,14 @@ local mapBox = world:addEntity({collideWorld = {
 for k, box in pairs(boxes) do
   addShape(mapBox, box)
 end
-local candyLand = world:addEntity({collideWorld = {
-  type = {player=true}
+local furnWorld = world:addEntity({collideWorld = {
+  type = {player=true, chairs=true}
 }})
-for k, candy in pairs(candies) do
-  addInteractable(candyLand, candy)
+for k, furn in pairs(furniture) do
+  addInteractable(furnWorld, furn)
 end
+
+--addInteractable(mapBox, witch)
 
 if debug then
   world:addEntity({renderable = {
