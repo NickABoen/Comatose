@@ -207,6 +207,17 @@ world:addSystem("timer",{
     end
 })
 
+world:addSystem("deathThingy", {
+   update = function(self, dt)
+     for player in pairs(world:query("player")) do
+        if player.hunger.value <= 0 then
+          Gamestate.switch(deathState)
+          return
+        end
+     end
+   end
+})
+
 --add a "ai" system with an update callback
 -- this system handles the calls to an enemy logic update
 world:addSystem("ai", {
