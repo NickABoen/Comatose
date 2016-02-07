@@ -182,7 +182,9 @@ world:addSystem("render", {
         --print(#rens)
         --now draw all of them
         for i, entity in ipairs(rens) do
+          if entity.renderable.hud then cam:detach() end
           entity.renderable.draw(entity)
+          if entity.renderable.hud then cam:attach() end
         end
     end
 })
