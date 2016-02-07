@@ -7,6 +7,7 @@ vector = require('hump/vector')
 require('TiledLoader')
 Secs = require('secs')
 world = Secs.new()
+HC = require 'HC'
 require 'trace'
 
 local fps
@@ -28,14 +29,13 @@ function printFPS()
     end
 end
 
-
 -- useful "enums"
 player_states = {neutral = "neutral", rolling = "rolling"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
 
-require 'components'
 require 'systems'
 require "AnimatedSprite"
+require 'components'
 
 function love.load()
 
@@ -53,4 +53,9 @@ function love.draw(dt)
     world:draw()
     trace.draw()
     printFPS()
+    local player = getPlayer()
+    love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
+    love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
+    love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
+    love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
 end

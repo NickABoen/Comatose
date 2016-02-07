@@ -1,4 +1,40 @@
 
+local function typeMatch(set, types)
+    for k, v in pairs(types) do
+      if set[v] then return true end
+    end
+    return false
+end
+
+
+function addInteractable(collider, obj)
+  collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(obj.collideObject.shape)
+end
+
+function addShape(collider, shape)
+  --collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(shape)
+end
+
+world:addSystem("collide",
+  {update = function(self, dt)
+    --print("updating collision")
+    for collider in pairs(world:query("collideWorld")) do
+      --print("going though worlds")
+      for entity in pairs(world:query("collideObject position")) do
+        --print("going though objects")
+        for shape, delta in pairs(collider.collideWorld.world:collisions(entity.collideObject.shape)) do
+          if typeMatch(collider.collideWorld.type, entity.collideObject.type) then
+            --print("found collision")
+            --move them away by the current vector
+            entity.collideObject.event(entity, collider, collider.collideWorld.objects[shape], dt)
+          end
+        end
+      end
+    end
+  end})
+
 -- adding an input system
 -- this system will handle processing user input
 world:addSystem("input",{
@@ -94,6 +130,12 @@ world:addSystem("movement", {
            local speed = entity.velocity.currentSpeed
            position.pos = position.pos + (vec * speed * dt)
         end
+        for entity in pairs(world:query("position collideObject")) do
+          local bx, by, bx2, by2 = entity.collideObject.shape:bbox()
+          local bw, bh = bx2 - bx, by2 - by
+          local pos = entity.position.pos
+          entity.collideObject.shape:moveTo(pos.x + bw/2, pos.y + bh/2)
+        end
     end
 })
 
@@ -117,4 +159,66 @@ world:addSystem("render", {
           entity.renderable.draw(entity)
         end
     end
+})
+
+local glucoseHarshness = 0.003
+local hungerHarshness = 0.003
+local glucoseHealth = 2
+local hungerHealth = 2
+local perfect = 100
+
+world:addSystem("updateHealth", {
+  update = function(entity, dt)
+    for entity in pairs(world:query("health glucose hunger")) do
+      local glucoseTerm = -glucoseHarshness*(entity.glucose.value - perfect)^2 + glucoseHealth
+      local hungerTerm = -hungerHarshness*(entity.hunger.value - perfect)^2 + hungerHealth
+      entity.health.value = entity.hunger.value + dt * glucoseTerm + dt * hungerTerm
+      entity.health.value = math.min(entity.health.value, entity.health.max)
+      entity.health.value = math.max(entity.health.value, entity.health.min)
+    end
+  end
+})
+
+world:addSystem("updateHunger", {
+  update = function(entity, dt)
+    for entity in pairs(world:query("glucose hunger")) do
+      local glucoseTerm = -0.001*(entity.glucose.value - 100)^2
+      entity.hunger.value = entity.hunger.value + dt * glucoseTerm
+      entity.hunger.value = math.min(entity.hunger.value, entity.hunger.max)
+      entity.hunger.value = math.max(entity.hunger.value, entity.hunger.min)
+    end
+  end
+})
+
+local hinderGlucose = 200
+
+world:addSystem("performHinders", {
+  update = function(entity, dt)
+    --add this later perhaps
+  end
+})
+
+function getPlayer()
+  for player in pairs(world:query("player")) do
+    return player
+  end
+end
+
+world:addSystem("preformList", {
+  update = function(entity, dt)
+    actions = world:query("toPerform action")
+    for toPerform in pairs(actions) do
+      world:detach(toPerform, "toPerform")
+      local player = getPlayer()
+      if toPerform.action.cost < player.glucose.value then
+        toPerform.action.action()
+        player.glucose.value = player.glucose.value - toPerform.action.cost
+        player.insulin.value = 0.05 * player.glucose.value - toPerform.action.cost
+        player.glucose.value = math.min(player.glucose.value, player.glucose.max)
+        player.glucose.value = math.max(player.glucose.value, player.glucose.min)
+        player.insulin.value = math.min(player.insulin.value, player.insulin.max)
+        player.insulin.value = math.max(player.insulin.value, player.insulin.min)
+      end
+    end
+  end
 })
