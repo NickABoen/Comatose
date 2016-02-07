@@ -17,6 +17,8 @@ world:addComponent("insulin", {value = 10, min = 0, max = 20})
 world:addComponent("action", {cost = 1, action = function() end})
 world:addComponent("toPerform", {})
 world:addComponent("animation", {})
+world:addComponent("breadman", {state = player_states.neutral})
+
 
 
 --For this component 'was' and 'is' should only ever be up or down while
@@ -88,12 +90,19 @@ local witch = world:addEntity({
     boundingBox = {},
     animation = {},
     witch = {state = player_states.neutral},
+    collideObject = {
+      type = {"actor", "witch"},
+      shape = HC.rectangle(300, 300, 10, 10),
+      event = function(entity, collider, obj, dt)
+        print("the witch hit you!")
+      end
+    },
     renderable = {
       z = 0.5,
       draw = function(witch)
         DrawInstance (Witch, witch.position.pos.x, witch.position.pos.y)
-        Witch.curr_anim = Witch.sprite.animations_names[2]
-        Witch.size_scale = 4
+        Witch.curr_anim = Witch.sprite.animations_names[1]
+        Witch.size_scale = 1.5
       end
     }
 })
@@ -108,12 +117,16 @@ world:addEntity({renderable = {
   end
 }})
 
-local witch = world:addEntity({
-  position = {pos = vector(600,600)},
+
+
+function makeBreadman()
+  world:addEntity({
+  position = {pos = vector(math.random(100)+300,math.random(100)+300)},
   boundingBox = {},
   velocity = {},
+  animation = {},
   collideObject = {
-    type = {"actor", "witch"},
+    type = {"actor", "breadman"},
     shape = HC.rectangle(300, 300, 10, 10),
     event = function(entity, collider, obj, dt)
       print("the witch hit you!")
@@ -121,17 +134,16 @@ local witch = world:addEntity({
   },
   renderable = {
     z = 0.5,
-    draw = function(player)
-      love.graphics.rectangle(
-          "fill",
-          player.position.pos.x,
-          player.position.pos.y,
-          player.boundingBox.width,
-          player.boundingBox.height
-      )
+    draw = function(breadman)
+      for k,v in pairs(Breadman) do
+        DrawInstance (Breadman[k], breadman.position.pos.x, breadman.position.pos.y)
+        Breadman[k].curr_anim = Breadman[k].sprite.animations_names[2]
+        Breadman[k].size_scale = 1
+      end
     end
   }
 })
+end
 
 local mapBox = world:addEntity({collideWorld = {
   type = {player=true}

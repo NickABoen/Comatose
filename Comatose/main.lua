@@ -33,6 +33,7 @@ end
 -- useful "enums"
 player_states = {neutral = "neutral", rolling = "rolling"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
+Breadman = {}
 
 require 'systems'
 require "AnimatedSprite"
@@ -41,6 +42,12 @@ require 'components'
 function love.load()
   Witch = GetInstance ("WitchSprite.lua")
   Player = GetInstance ("PlayerSprite.lua")
+  Breadman[1] = GetInstance ("BreadmanSprite.lua")
+  Breadman[2] = GetInstance ("BreadmanSprite.lua")
+  Breadman[3] = GetInstance ("BreadmanSprite.lua")
+  makeBreadman()
+  makeBreadman()
+  makeBreadman()
 
   print(love.graphics.getBlendMode())
   printNotice('Trace system online.', trace.styles.green)

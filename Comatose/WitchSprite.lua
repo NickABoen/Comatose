@@ -38,7 +38,7 @@ return {
 		fly = {
 		  --	love.graphics.newQuad( X, Y, Width, Height, Image_W, Image_H)
       love.graphics.newQuad( 20, 1, 16, 16, image_w, image_h ),
-   },
+   	},
 
     dazed = {
       --	love.graphics.newQuad( X, Y, Width, Height, Image_W, Image_H)

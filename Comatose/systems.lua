@@ -232,9 +232,27 @@ world:addSystem("preformList", {
 
 world:addSystem("playerAnimation", {
   update = function(entity, dt)
-    actions = world:query("animation")
+    actions = world:query("animation player")
       if Player.sprite.curr_anim == Player.sprite.animations_names.rolling then
         UpdateInstance(Player, dt)
+      end
+  end
+})
+
+world:addSystem("witchAnimation", {
+  update = function(entity, dt)
+    actions = world:query("animation witch")
+      UpdateInstance(Witch, dt)
+  end
+})
+
+world:addSystem("breadmanAnimation", {
+  update = function(entity, dt)
+    actions = world:query("animation breadman")
+      for k,v in pairs(Breadman) do
+        if Breadman[k].sprite.curr_anim == Breadman[k].sprite.animations_names.fly then
+          UpdateInstance(Breadman[k], dt)
+        end
       end
   end
 })
