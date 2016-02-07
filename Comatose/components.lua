@@ -5,6 +5,7 @@ world:addComponent("velocity", { maxSpeed = 100, currentSpeed = 100, vec = vecto
 world:addComponent("boundingBox", {width = 10, height = 10})
 world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
+world:addComponent("witch", {state = player_states.neutral})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 
@@ -31,10 +32,13 @@ local spaceKey = world:addEntity({
 local escapeKey = world:addEntity({
     key = {id = 'escape'}
 })
+local dKey = world:addEntity({
+    key = {id = 'd'}
+})
 
 -- create a player entity at position (100, 100)
 local player = world:addEntity({
-    position = {pos = vector(100,100)},
+    position = {pos = vector(600,445)},
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
     hasInput = {},
@@ -42,18 +46,29 @@ local player = world:addEntity({
     renderable = {
       z = 0.5,
       draw = function(player)
-        love.graphics.rectangle(
-            "fill",
-            player.position.pos.x,
-            player.position.pos.y,
-            player.boundingBox.width,
-            player.boundingBox.height
-        )
+        DrawInstance (Player, player.position.pos.x, player.position.pos.y)
+        Player.size_scale = 2
       end
     }
 })
 
-local layers, tiles, boxes = Loader.load('Maps', 'testmap')
+-- create a player entity at position (200, 200)
+local witch = world:addEntity({
+    position = {pos = vector(200,200)},
+    velocity = {maxSpeed = 100, currentSpeed = 100},
+    boundingBox = {},
+    witch = {state = player_states.neutral},
+    renderable = {
+      z = 0.5,
+      draw = function(witch)
+        DrawInstance (Witch, witch.position.pos.x, witch.position.pos.y)
+        Witch.curr_anim = Witch.sprite.animations_names[2]
+        Witch.size_scale = 4
+      end
+    }
+})
+
+local layers, tiles, boxes = Loader.load('Maps', 'level1_1')
 --add the map
 world:addEntity({renderable = {
   draw = function(entity)

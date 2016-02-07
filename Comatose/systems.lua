@@ -36,6 +36,10 @@ world:addSystem("input",{
             local currentSpeed = entity.velocity.currentSpeed
             local player = entity.player
 
+            if player == nil then
+              player = entity.witch
+            end
+
             if keys['escape'].key.state == key_states.released then
                 love.event.quit()
             end
@@ -57,7 +61,15 @@ world:addSystem("input",{
                 else
                     velocity.vec.x = 0
                 end
-            
+
+                if (keys['d'].key.state == key_states.pressed) or (keys['d'].key.state == key_states.down) then
+                  Player.curr_anim = Player.sprite.animations_names[2]
+                  Player.curr_frame = 1
+                else
+                  Player.curr_anim = Player.sprite.animations_names[1]
+                  Player.curr_frame = 1
+                end
+
                 velocity.vec = velocity.vec:normalized()
 
                 if keys['space'].key.state == key_states.pressed then
@@ -107,4 +119,3 @@ world:addSystem("render", {
         end
     end
 })
-

@@ -1,7 +1,7 @@
 --------------------------------------------------
 --                    Comatose                  --
 --------------------------------------------------
-local debug = true
+local debug = false
 
 vector = require('hump/vector')
 require('TiledLoader')
@@ -35,8 +35,13 @@ key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'release
 
 require 'components'
 require 'systems'
+require "AnimatedSprite"
 
 function love.load()
+
+  Witch = GetInstance ("WitchSprite.lua")
+  Player = GetInstance ("PlayerSprite.lua")
+
   printNotice('Trace system online.', trace.styles.green)
 end
 
