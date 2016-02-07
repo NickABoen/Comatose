@@ -26,7 +26,7 @@ local menuWorld = require('menu/menu')
 local testWorld = require('PushTest/pushtest')
 local level_1_1World = require('level_1_1/level_1_1')
 local level_1_2World = require('level_1_2/level_1_2')
-
+local level_1_3World = require('level_1_3/level_1_3')
 --make the game states (ensure these are global)
 --here is the code for the leadin
 leadin = {}
@@ -113,6 +113,23 @@ function level_1_2:draw()
   love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
 end
 
+level_1_3 = {}
+function level_1_3:update(dt)
+  level_1_3World:update(dt)
+end
+function level_1_3:draw()
+  cam:attach()
+  level_1_3World:draw()
+  cam:detach()
+  trace.draw()
+  printFPS()
+  local player = getPlayer(level_1_3World)
+  love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
+  love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
+  love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
+  love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
+end
+
 function love.load()
   --Witch = GetInstance ("WitchSprite.lua")
   --Player = GetInstance ("PlayerSprite.lua")
@@ -124,5 +141,5 @@ function love.load()
   cam.smoother = Camera.smooth.linear(1000)
   --init the game states
   Gamestate.registerEvents()
-  Gamestate.switch(level_1_2)
+  Gamestate.switch(level_1_3)
 end
