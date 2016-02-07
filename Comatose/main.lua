@@ -77,12 +77,17 @@ function menu:keyreleased(key, code)
     end
 end
 
+function rubber_band(dx,dy,...)
+    local dt = love.timer.getDelta()
+    return Camera.smooth.linear(1000)(dx*dt, dy*dt, ...)
+end
+
 function love.load()
   printNotice('Trace system online.', trace.styles.green)
   local width, height = love.graphics.getDimensions()
   cam = Camera(100, 100)
   cam:zoom(2)
-  cam.smoother = Camera.smooth.damped(1000)
+  cam.smoother = Camera.smooth.linear(1000)
   --init the game states
   Gamestate.registerEvents()
   Gamestate.switch(pushtest)

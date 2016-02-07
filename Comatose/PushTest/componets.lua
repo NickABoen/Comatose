@@ -77,8 +77,8 @@ local player = world:addEntity({
         local position = entity.position
         local vec = entity.velocity.vec
         local speed = entity.velocity.currentSpeed
-        position.pos = position.pos - (vec * speed * dt)
-        position.pos = position.pos + 0.05*(position.pos - obj.position.pos)
+        position.pos = position.pos - 0.3*(vec * speed * dt)
+        obj.position.pos = obj.position.pos + 0.0005*entity.glucose.value*(obj.position.pos - position.pos)
       end
     },
     renderable = {
