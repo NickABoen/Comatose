@@ -92,7 +92,6 @@ world:addSystem("movement", {
            local position = entity.position
            local vec = entity.velocity.vec
            local speed = entity.velocity.currentSpeed
-
            position.pos = position.pos + (vec * speed * dt)
         end
     end

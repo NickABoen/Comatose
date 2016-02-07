@@ -46,7 +46,7 @@ return {
     love.graphics.newQuad( 44, 4, 16, 16, image_w, image_h ),
     love.graphics.newQuad( 20, 4, 16, 16, image_w, image_h ),
     love.graphics.newQuad( 44, 4, 16, 16, image_w, image_h ),
-}
+		}	
 
 	} --animations
 
