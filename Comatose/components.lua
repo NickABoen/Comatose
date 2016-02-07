@@ -14,7 +14,7 @@ world:addComponent("hunger", {value = 100, min = 0, max = 400})
 world:addComponent("glucose", {value = 100, min = 0, max = 400})
 world:addComponent("insulin", {value = 10, min = 0, max = 20})
 world:addComponent("action", {cost = 1, action = function() end})
-world:addComponent("toPerform", {cost = 1, action = function() end})
+world:addComponent("toPerform", {})
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
