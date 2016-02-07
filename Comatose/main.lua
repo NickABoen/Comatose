@@ -33,8 +33,9 @@ end
 player_states = {neutral = "neutral", rolling = "rolling"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
 
-require 'components'
 require 'systems'
+require 'components'
+
 
 function love.load()
   printNotice('Trace system online.', trace.styles.green)
