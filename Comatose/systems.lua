@@ -137,7 +137,7 @@ world:addSystem("movement", {
           entity.collideObject.shape:moveTo(pos.x + bw/2, pos.y + bh/2)
         end
         for entity in pairs(world:query("player")) do
-          printDebug("player moved cammera")
+          --printDebug("player moved cammera")
           cam:lookAt(math.ceil(entity.position.pos.x), math.ceil(entity.position.pos.y))
         end
     end
@@ -161,6 +161,24 @@ world:addSystem("render", {
         --now draw all of them
         for i, entity in ipairs(rens) do
           entity.renderable.draw(entity)
+        end
+    end
+})
+
+--add a "timer" system with an update callback
+-- this system updates all registered timers each tick
+world:addSystem("timer",{
+    update = function(self, dt)
+        for entity in pairs(world:query("timers")) do
+            for i in ipairs(entity.timers.maxTimes) do
+                local maxTime = entity.timers.maxTimes[i]
+                local timers = entity.timers 
+                timers.timers[i] = timers.timers[i] - dt
+
+                if timers.timers[i] < 0 then
+                    timers.timers[i] = 0
+                end
+            end
         end
     end
 })

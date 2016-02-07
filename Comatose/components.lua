@@ -9,7 +9,7 @@ world:addComponent("witch", {state = player_states.neutral})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 world:addComponent("damage", {amount = 0})
-world:addComponent("timer", {max = 1, timeLeft = 1, state = timer_states.stop, trigger = function() end})
+world:addComponent("timers", {maxTimes = {}, timers = {}})
 -- phase transitions are functions. Without parameter (besides entity) they should return if phase 
 -- change criteria has been met, otherwise if a new phase is passed they supply the 
 -- transition function to make the change phase functions deal with behavior that occurs 
@@ -60,7 +60,6 @@ local player = world:addEntity({
     insulin = {value = 10},
     health = {value = 1500},
     position = {pos = vector(600,445)},
-
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
     hasInput = {},
@@ -91,6 +90,7 @@ local witch = world:addEntity({
     position = {pos = vector(200,200)},
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
+    timers = {maxTimes = {1}, timers = {1}},
     witch = {state = player_states.neutral},
     renderable = {
       z = 0.5,
@@ -102,11 +102,6 @@ local witch = world:addEntity({
     }
 })
 
-local spawnWitch = function()
-    world:addEntity({
-        
-    })
-end
 
 local layers, tiles, boxes = Loader.load('Maps', 'level1_1')
 --add the map
@@ -118,32 +113,44 @@ world:addEntity({renderable = {
   end
 }})
 
-local witch = world:addEntity({
-  position = {pos = vector(love.graphics.getWidth()/2,love.graphics.getHeight()/2)},
-  boundingBox = {},
-  phases = {},
-  velocity = {},
-  collideObject = {
-    type = {"actor", "witch"},
-    shape = HC.rectangle(300, 300, 10, 10),
-    event = function(entity, collider, obj, dt)
-      print("the witch hit you!")
-    end
-  },
-  renderable = {
-    z = 0.5,
-    draw = function(player)
-      love.graphics.rectangle(
-          "fill",
-          player.position.pos.x,
-          player.position.pos.y,
-          player.boundingBox.width,
-          player.boundingBox.height
-      )
-    end
-  }
-})
+local spawnWitch = function()
+    world:addEntity({
+      position = {pos = vector(love.graphics.getWidth()/2,love.graphics.getHeight()/2)},
+      boundingBox = {},
+      phases = {},
+      timers = {maxTimes = {1}, timers = {1}},
+      velocity = {},
+      collideObject = {
+        type = {"actor", "witch"},
+        shape = HC.rectangle(300, 300, 10, 10),
+        event = function(entity, collider, obj, dt)
+          print("the witch hit you!")
+        end
+      },
+      renderable = {
+        z = 0.5,
+        draw = function(entity)
+          local timers = entity.timers
+          local floatTimer = timers.timers[witch_timers.floatTimer]
+          local newPos = (math.sin(floatTimer * 2 * math.pi) * 5) + entity.position.pos.y
 
+          if floatTimer == 0 then
+            timers.timers[witch_timers.floatTimer] = timers.maxTimes[witch_timers.floatTimer]
+          end
+
+          love.graphics.rectangle(
+              "fill",
+              entity.position.pos.x,
+              --entity.position.pos.y,
+              newPos,
+              entity.boundingBox.width,
+              entity.boundingBox.height
+          )
+        end
+      }
+    })
+end
+spawnWitch()
 function witchPhase1Transition(entity, phase)
    if phase then -- phase was supplied and we should handle the actual transition
    else -- phase was not supplied so we only need to return if we're ready to transfer
@@ -160,7 +167,8 @@ local mapBox = world:addEntity({collideWorld = {
 for k, box in pairs(boxes) do
   addShape(mapBox, box)
 end
-addInteractable(mapBox, witch)
+
+--addInteractable(mapBox, witch)
 
 if debug then
   world:addEntity({renderable = {

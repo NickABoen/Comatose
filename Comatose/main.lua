@@ -1,7 +1,7 @@
 --------------------------------------------------
 --                    Comatose                  --
 --------------------------------------------------
-local debug = false
+local debug = true 
 
 timer = require('hump/timer')
 Camera = require('hump/camera')
@@ -36,6 +36,7 @@ player_states = {neutral = "neutral", rolling = "rolling"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
 boss_states = {attacking = 'attacking', idle = 'idle', transPhase = 'transPhase'}
 timer_states = {stop = 'stop', restart = 'restart'}
+witch_timers = {floatTimer = 1}
 
 require 'systems'
 require "AnimatedSprite"
@@ -61,11 +62,11 @@ function love.draw(dt)
     cam:attach()
     world:draw()
     cam:detach()
-    trace.draw()
-    printFPS()
     local player = getPlayer()
     love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
     love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
     love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
     love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
+    trace.draw()
+    printFPS()
 end
