@@ -135,7 +135,7 @@ world:addEntity({renderable = {
   end
 }})
 
---[[
+
 local candyIdTable = {8432, 8433, 8434, 8435, 8436}
 local candies = {}
 for i = 0, 30 do
@@ -158,7 +158,7 @@ for i = 0, 30 do
     }
   })
 end
---]]
+
 
 local mapBox = world:addEntity({collideWorld = {
   type = {player=true}
@@ -166,6 +166,7 @@ local mapBox = world:addEntity({collideWorld = {
 for k, box in pairs(boxes) do
   addShape(mapBox, box)
 end
+
 local candyLand = world:addEntity({collideWorld = {
   type = {player=true}
 }})
