@@ -109,10 +109,13 @@ world:addEntity({renderable = {
     end
   end
 }})
-
+--33x22 @ 16x16 starts at 1,5
 local furnitureIdTable = {6832, 6833, 6831, 6830, 7286}
 local furniture = {}
-for i = 1, 10 do
+local top_left, bot_right
+top_left = vector(1 * 16, 4 * 16)
+bot_right = vector(32*16 + top_left.x, 21*16 + top_left.y)
+for i = 1, 20 do
   local tile = tiles[furnitureIdTable[i % 5 + 1]]
   furniture[i] = world:addEntity({
     action = {
@@ -131,7 +134,8 @@ for i = 1, 10 do
       end
     },
     velocity = {maxSpeed = 70, currentSpeed = 70, vec = vector(0,0)},
-    position = {pos = vector(i * 17, 240)},
+    --position = {pos = vector(i * 17, 240)},
+    position = {pos = vector(love.math.random(top_left.x, bot_right.x), love.math.random(top_left.y, bot_right.y))},
     renderable = {
       z = 0.3,
       draw = function(entity)
@@ -146,6 +150,7 @@ for i = 1, 10 do
         local vec = vol.vec
         local speed = vol.currentSpeed
         entity.position.pos = entity.position.pos - 0.3*speed * vec * dt
+        sounds['chair']:play()
         if obj then
           vol = obj.velocity
           vec = vol.vec
