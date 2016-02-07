@@ -14,6 +14,9 @@ HC = require 'HC'
 require 'trace'
 require 'util'
 require "animations/AnimatedSprite"
+bgMusic = nil
+sounds = {}
+stepsCooldown = 0.5
 
 function getPlayer(world)
   for player in pairs(world:query("player")) do
@@ -33,6 +36,7 @@ local level_1_3World = require('level_1_3/level_1_3')
 leadin = {}
 function leadin:update(dt)
   leadinWorld:update(dt)
+  stepsCooldown = stepsCooldown - dt
 end
 function leadin:draw()
   cam:attach()
@@ -50,6 +54,7 @@ end
 pushtest = {}
 function pushtest:update(dt)
   testWorld:update(dt)
+  stepsCooldown = stepsCooldown - dt
 end
 function pushtest:draw()
   cam:attach()
@@ -87,6 +92,7 @@ witch_timers = {floatTimer = 1, stateTimer = 2}
 level_1_1 = {}
 function level_1_1:update(dt)
   level_1_1World:update(dt)
+  stepsCooldown = stepsCooldown - dt
 end
 function level_1_1:draw()
   cam:attach()
@@ -99,6 +105,7 @@ end
 level_1_2 = {}
 function level_1_2:update(dt)
   level_1_2World:update(dt)
+  stepsCooldown = stepsCooldown - dt
 end
 function level_1_2:draw()
   cam:attach()
@@ -111,6 +118,7 @@ end
 level_1_3 = {}
 function level_1_3:update(dt)
   level_1_3World:update(dt)
+  stepsCooldown = stepsCooldown - dt
 end
 function level_1_3:draw()
   cam:attach()
@@ -124,6 +132,22 @@ end
 function love.load()
   --Witch = GetInstance ("WitchSprite.lua")
   --Player = GetInstance ("PlayerSprite.lua")
+  bgMusic = love.audio.newSource("SoundAndMusic/Mesmerize.mp3")
+  bgMusic:setVolume(0.6)
+  bgMusic:setLooping(true)
+  bgMusic:play()
+
+  sounds['fs1'] = love.audio.newSource("SoundAndMusic/footstep01.ogg", 'static')
+  sounds['fs2'] = love.audio.newSource("SoundAndMusic/footstep02.ogg", 'static')
+  sounds['fs3'] = love.audio.newSource("SoundAndMusic/footstep03.ogg", 'static')
+  sounds['chair'] = love.audio.newSource("SoundAndMusic/chair_move.wav",'static')
+  sounds['magic'] = love.audio.newSource("SoundAndMusic/magic1.wav", 'static')
+  sounds['roll'] = love.audio.newSource("SoundAndMusic/roll_sound.wav", 'static')
+
+  local stepVolume = 0.06
+  sounds['fs1']:setVolume(stepVolume)
+  sounds['fs2']:setVolume(stepVolume)
+  sounds['fs3']:setVolume(stepVolume)
 
   printNotice('Trace system online.', trace.styles.green)
   local width, height = love.graphics.getDimensions()

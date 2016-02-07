@@ -100,7 +100,7 @@ local player = world:addEntity({
     }
 })
 
-local layers, tiles, boxes = Loader.load('Maps', 'level1_3')
+local layers, tiles, boxes = Loader.load('Maps', 'level1_3',3)
 --add the map
 world:addEntity({renderable = {
   draw = function(entity)
@@ -339,4 +339,3 @@ local spawnWitch = function()
     })
 end
 spawnWitch()
->>>>>>> 0efcf30d571f0dc8c913b26ddeba9f84a51eb8d5
