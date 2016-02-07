@@ -1,7 +1,7 @@
 --------------------------------------------------
 --                    Comatose                  --
 --------------------------------------------------
-local debug = true
+local debug = false
 
 timer = require('hump/timer')
 Gamestate = require('hump/gamestate')
@@ -39,12 +39,12 @@ function leadin:draw()
   leadinWorld:draw()
   cam:detach()
   trace.draw()
-  printFPS()
+  --printFPS()
   local player = getPlayer(leadinWorld)
-  love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
-  love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
-  love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
-  love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
+  --love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
+  --love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
+  --love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
+  --love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
 end
 
 pushtest = {}

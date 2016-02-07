@@ -157,3 +157,32 @@ if debug then
     end
   }})
 end
+
+world:addEntity({renderable = {
+  z = 1,
+  hud = true,
+  draw = function(entity)
+    for player in pairs(world:query("player")) do
+      local lowerX = 600
+      local upperX = 600 + 180
+      local height = 10
+      love.graphics.setColor(255, 0, 0)
+      love.graphics.rectangle('fill', lowerX, 10, upperX - lowerX, height)
+      love.graphics.setColor(0, 255, 0)
+      love.graphics.rectangle('fill', lowerX, 30, upperX - lowerX, height)
+      love.graphics.setColor(0, 0, 255)
+      love.graphics.rectangle('fill', lowerX, 50, upperX - lowerX, height)
+      love.graphics.setColor(0, 0, 0)
+      local xScale = (upperX - lowerX) / (player.hunger.max - player.hunger.min)
+      local xLoc = lowerX + xScale * player.hunger.value
+      love.graphics.rectangle('fill', xLoc, 5, 5, 20)
+      local xScale = (upperX - lowerX) / (player.glucose.max - player.glucose.min)
+      local xLoc = lowerX + xScale * player.glucose.value
+      love.graphics.rectangle('fill', xLoc, 25, 5, 20)
+      local xScale = (upperX - lowerX) / (player.insulin.max - player.insulin.min)
+      local xLoc = lowerX + xScale * player.insulin.value
+      love.graphics.rectangle('fill', xLoc, 45, 5, 20)
+      love.graphics.setColor(255, 255, 255)
+    end
+  end
+}})

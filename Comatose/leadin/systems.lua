@@ -264,8 +264,11 @@ world:addSystem("playerAnimation", {
     player = getPlayer()
 
     if Player.curr_anim == Player.sprite.animations_names[2] then
-      if Player.curr_frame < 6 then
-        player.velocity.currentSpeed = player.velocity.currentSpeed + 10
+      if Player.curr_frame < 3  and player.glucose.value > 5 then
+        if Player.curr_frame == 1 then
+          player.velocity.currentSpeed = player.velocity.currentSpeed + 20
+          player.glucose.value = player.glucose.value - 1
+        end
         UpdateInstance(Player, dt)
       else
         Player.curr_frame = 1
