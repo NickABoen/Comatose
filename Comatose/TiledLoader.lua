@@ -31,8 +31,8 @@ local function loadTilesets(dir, out)
     image.tileheight = tset.tileheight
     image.spacing = tset.spacing
     image.count = tset.tilecount
-    image.tileswidth = math.ceil(tset.imagewidth / (tset.spacing + tset.tilewidth))
-    image.tilesheight = math.ceil(tset.imageheight / (tset.spacing + tset.tileheight))
+    image.tileswidth = math.floor(tset.imagewidth / (tset.spacing + tset.tilewidth))
+    image.tilesheight = math.floor(tset.imageheight / (tset.spacing + tset.tileheight))
     table.insert(out.tilesets, image)
     out.tilecollide = {}
     --print(#out.map.tilesets[i].tiles)

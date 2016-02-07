@@ -1,4 +1,18 @@
 
+local world = ...
+
+Player = GetInstance ("PlayerSprite.lua")
+
+local function addInteractable(collider, obj)
+  collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(obj.collideObject.shape)
+end
+
+local function addShape(collider, shape)
+  --collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(shape)
+end
+
 local function typeMatch(set, types)
     for k, v in pairs(types) do
       if set[v] then return true end
@@ -6,13 +20,12 @@ local function typeMatch(set, types)
     return false
 end
 
-
-function addInteractable(collider, obj)
+local function addInteractable(collider, obj)
   collider.collideWorld.objects[obj.collideObject.shape] = obj
   collider.collideWorld.world:register(obj.collideObject.shape)
 end
 
-function addShape(collider, shape)
+local function addShape(collider, shape)
   --collider.collideWorld.objects[obj.collideObject.shape] = obj
   collider.collideWorld.world:register(shape)
 end
@@ -99,20 +112,17 @@ world:addSystem("input",{
                 end
 
                 if (keys['d'].key.state == key_states.pressed) or (keys['d'].key.state == key_states.down) then
-                  player.state = player_states.rolling
-                  print(player.state)
                   Player.curr_anim = Player.sprite.animations_names[2]
                   Player.curr_frame = 1
                 else
                   Player.curr_anim = Player.sprite.animations_names[1]
+                  Player.curr_frame = 1
                 end
 
                 velocity.vec = velocity.vec:normalized()
 
                 if keys['space'].key.state == key_states.pressed then
                     player.state = player_states.rolling
-                    Player.curr_anim = Player.sprite.animations_names[2]
-                    Player.curr_frame = 1
                 end
 
             elseif player.state == player_states.rolling then
@@ -122,6 +132,10 @@ world:addSystem("input",{
     end
 })
 
+
+world:addSystem("stateChange", {
+
+})
 
 -- add a "movement" system with a update callback
 -- this system updates the position components of all entities with a velocity component
@@ -140,7 +154,11 @@ world:addSystem("movement", {
           entity.collideObject.shape:moveTo(pos.x + bw/2, pos.y + bh/2)
         end
         for entity in pairs(world:query("player")) do
-          printDebug("player moved cammera")
+          local vec = entity.velocity.vec
+          if math.abs(vec.x) > 0.001 or math.abs(vec.y) > 0.001 then
+            entity.glucose.value = entity.glucose.value - 0.33 * dt
+          end
+          --printDebug("player moved cammera")
           cam:lookAt(math.ceil(entity.position.pos.x), math.ceil(entity.position.pos.y))
         end
     end
@@ -205,7 +223,7 @@ world:addSystem("performHinders", {
   end
 })
 
-function getPlayer()
+local function getPlayer()
   for player in pairs(world:query("player")) do
     return player
   end
@@ -235,24 +253,6 @@ world:addSystem("playerAnimation", {
     actions = world:query("animation player")
       if Player.sprite.curr_anim == Player.sprite.animations_names.rolling then
         UpdateInstance(Player, dt)
-      end
-  end
-})
-
-world:addSystem("witchAnimation", {
-  update = function(entity, dt)
-    actions = world:query("animation witch")
-      UpdateInstance(Witch, dt)
-  end
-})
-
-world:addSystem("breadmanAnimation", {
-  update = function(entity, dt)
-    actions = world:query("animation breadman")
-      for k,v in pairs(Breadman) do
-        if Breadman[k].sprite.curr_anim == Breadman[k].sprite.animations_names.fly then
-          UpdateInstance(Breadman[k], dt)
-        end
       end
   end
 })

@@ -1,3 +1,14 @@
+local world = ...
+
+local function addInteractable(collider, obj)
+  collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(obj.collideObject.shape)
+end
+
+local function addShape(collider, shape)
+  --collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(shape)
+end
 
 -- create the components
 world:addComponent("position", { pos = vector(0,0)})
@@ -15,11 +26,10 @@ world:addComponent("hunger", {value = 100, min = 0, max = 400})
 world:addComponent("glucose", {value = 100, min = 0, max = 400})
 world:addComponent("insulin", {value = 10, min = 0, max = 20})
 world:addComponent("action", {cost = 1, action = function() end})
+world:addComponent("food", {dhunger = 10, dglucose = 10})
+world:addComponent("candy", {})
 world:addComponent("toPerform", {})
 world:addComponent("animation", {})
-world:addComponent("breadman", {state = player_states.neutral})
-
-
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
@@ -50,64 +60,42 @@ local dKey = world:addEntity({
 
 -- create a player entity at position (100, 100)
 local player = world:addEntity({
-
     glucose = {value = 90},
     hunger = {value = 90},
     insulin = {value = 10},
     health = {value = 1500},
-    position = {pos = vector(600,445)},
-
+    position = {pos = vector(545,240)},
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
-    hasInput = {},
     animation = {},
+    hasInput = {},
     player = {state = player_states.neutral},
     collideObject = {
       type = {"actor", "player"},
-      shape = HC.rectangle(200, 200, 10, 10),
       event = function(entity, collider, obj, dt)
-        if obj then print("you hit the witch!") end
-        print("collide!")
-        local position = entity.position
-        local vec = entity.velocity.vec
-        local speed = entity.velocity.currentSpeed
-        position.pos = position.pos - (vec * speed * dt)
+        if obj and obj.candy then
+          entity.glucose.value = entity.glucose.value + obj.food.dglucose
+          entity.hunger.value = entity.hunger.value + obj.food.dhunger
+          world:delete(obj)
+        elseif not obj then
+          print("collide!")
+          local position = entity.position
+          local vec = entity.velocity.vec
+          local speed = entity.velocity.currentSpeed
+          position.pos = position.pos - (vec * speed * dt)
+        end
       end
     },
     renderable = {
       z = 0.5,
       draw = function(player)
         DrawInstance (Player, player.position.pos.x, player.position.pos.y)
-        Player.size_scale = 2
+        Player.size_scale = 1.5
       end
     }
 })
 
--- create a player entity at position (200, 200)
-local witch = world:addEntity({
-    position = {pos = vector(200,200)},
-    velocity = {maxSpeed = 100, currentSpeed = 100},
-    boundingBox = {},
-    animation = {},
-    witch = {state = player_states.neutral},
-    collideObject = {
-      type = {"actor", "witch"},
-      shape = HC.rectangle(300, 300, 10, 10),
-      event = function(entity, collider, obj, dt)
-        print("the witch hit you!")
-      end
-    },
-    renderable = {
-      z = 0.5,
-      draw = function(witch)
-        DrawInstance (Witch, witch.position.pos.x, witch.position.pos.y)
-        Witch.curr_anim = Witch.sprite.animations_names[1]
-        Witch.size_scale = 1.5
-      end
-    }
-})
-
-local layers, tiles, boxes = Loader.load('Maps', 'level1_1')
+local layers, tiles, boxes = Loader.load('Maps', 'leadin')
 --add the map
 world:addEntity({renderable = {
   draw = function(entity)
@@ -117,42 +105,43 @@ world:addEntity({renderable = {
   end
 }})
 
-
-
-function makeBreadman()
-  world:addEntity({
-  position = {pos = vector(math.random(100)+300,math.random(100)+300)},
-  boundingBox = {},
-  velocity = {},
-  animation = {},
-  collideObject = {
-    type = {"actor", "breadman"},
-    shape = HC.rectangle(300, 300, 10, 10),
-    event = function(entity, collider, obj, dt)
-      print("the witch hit you!")
-    end
-  },
-  renderable = {
-    z = 0.5,
-    draw = function(breadman)
-      for k,v in pairs(Breadman) do
-        DrawInstance (Breadman[k], breadman.position.pos.x, breadman.position.pos.y)
-        Breadman[k].curr_anim = Breadman[k].sprite.animations_names[2]
-        Breadman[k].size_scale = 1
+local candyIdTable = {8432, 8433, 8434, 8435, 8436}
+local candies = {}
+for i = 0, 30 do
+  local tile = tiles[candyIdTable[i % 5 + 1]]
+  candies[#candies + 1] = world:addEntity({
+    food = {
+      dhunger = 1,
+      dglucose = 3
+    },
+    candy = {},
+    renderable = {
+      z = 0.3,
+      draw = function(entity)
+        tile:draw(i * 17, 240)
       end
-    end
-  }
-})
+    },
+    collideObject = {
+      type = {"object", "candy"},
+      shape = HC.rectangle(i * 17 + 4, 240 + 4, 8, 8)
+    }
+  })
 end
 
 local mapBox = world:addEntity({collideWorld = {
   type = {player=true}
 }})
-
 for k, box in pairs(boxes) do
   addShape(mapBox, box)
 end
-addInteractable(mapBox, witch)
+local candyLand = world:addEntity({collideWorld = {
+  type = {player=true}
+}})
+for k, candy in pairs(candies) do
+  addInteractable(candyLand, candy)
+end
+
+--addInteractable(mapBox, witch)
 
 if debug then
   world:addEntity({renderable = {
