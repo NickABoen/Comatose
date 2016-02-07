@@ -16,7 +16,15 @@ world:addComponent("velocity", { maxSpeed = 100, currentSpeed = 100, vec = vecto
 world:addComponent("boundingBox", {width = 10, height = 10})
 world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
-world:addComponent("witch",{hitPlayer = false, hitWall = false, freq = 1, amp = 1, speed = 100, target = nil})
+world:addComponent("damage", {amount = 0})
+world:addComponent("timers", {maxTimes = {}, timers = {}})
+world:addComponent("witch", {hitPlayer = false, hitWall = false, freq = 1, amp = 1, speed = 100, target = nil})
+-- phase transitions are functions. Without parameter (besides entity) they should return if phase
+-- change criteria has been met, otherwise if a new phase is passed they supply the
+-- transition function to make the change phase functions deal with behavior that occurs
+-- from substates and reactions to players
+world:addComponent("phases",{current = 1, transitions = {}, functions  = {}})
+world:addComponent("boss", {state = boss_states.idle})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end, hud = false})
 world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
@@ -30,13 +38,6 @@ world:addComponent("food", {dhunger = 10, dglucose = 10})
 world:addComponent("candy", {})
 world:addComponent("toPerform", {})
 world:addComponent("animation", {})
-
-
-world:addComponent("damage", {amount = 0})
-world:addComponent("timers", {maxTimes = {}, timers = {}})
-world:addComponent("phases",{current = 1, transitions = {}, functions  = {}})
-world:addComponent("boss", {state = boss_states.idle})
-
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
@@ -71,27 +72,23 @@ local player = world:addEntity({
     hunger = {value = 90},
     insulin = {value = 10},
     health = {value = 1500},
-    position = {pos = vector(280,80)},
+    position = {pos = vector(200,200)},
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
-    animation = {},
     hasInput = {},
+    animation = {},
     player = {state = player_states.neutral},
     collideObject = {
       type = {"actor", "player"},
       event = function(entity, collider, obj, dt)
-        if obj and obj.candy then
-          entity.glucose.value = entity.glucose.value + obj.food.dglucose
-          entity.hunger.value = entity.hunger.value + obj.food.dhunger
-          world:delete(obj)
-        elseif not obj then
-          print("collide!")
-          local position = entity.position
-          local vec = entity.velocity.vec
-          local speed = entity.velocity.currentSpeed
-          --cam:lockPosition(position.pos.x, position.pos.y, Camera.smooth.linear(10000))
-          position.pos = position.pos - (vec * speed * dt)
+        local position = entity.position
+        local vec = entity.velocity.vec
+        local speed = entity.velocity.currentSpeed
+        if obj then
+          world:attach(obj, {toPerform = {}})
+          obj.position.pos = obj.position.pos + 0.0005*entity.glucose.value*(obj.position.pos - position.pos)
         end
+        position.pos = position.pos - 0.3*(vec * speed * dt)
       end
     },
     renderable = {
@@ -103,7 +100,7 @@ local player = world:addEntity({
     }
 })
 
-local layers, tiles, boxes = Loader.load('Maps', 'level1_2')
+local layers, tiles, boxes = Loader.load('Maps', 'level1_3')
 --add the map
 world:addEntity({renderable = {
   draw = function(entity)
@@ -113,30 +110,57 @@ world:addEntity({renderable = {
   end
 }})
 
---[[
-local candyIdTable = {8432, 8433, 8434, 8435, 8436}
-local candies = {}
-for i = 0, 30 do
-  local tile = tiles[ candyIdTable[i % 5 + 1] ]
-  candies[#candies + 1] = world:addEntity({
-    food = {
-      dhunger = 1,
-      dglucose = 3
+local furnitureIdTable = {6832, 6833, 6831, 6830, 7286}
+local furniture = {}
+for i = 1, 10 do
+  local tile = tiles[furnitureIdTable[i % 5 + 1]]
+  furniture[i] = world:addEntity({
+    action = {
+      cost = 0.1,
+      action = function(entity)
+        local e = entity
+        print(e)
+        entity.velocity.vec.x, entity.velocity.vec.y = player.velocity.vec.x, player.velocity.vec.y
+        Timer.after(0.15, function()
+          print("STOP!")
+          e.velocity.vec.x = 0
+          e.velocity.vec.y = 0
+        end)
+        --printDebug(Timer)
+        print("tried to push the box")
+      end
     },
-    candy = {},
+    velocity = {maxSpeed = 70, currentSpeed = 70, vec = vector(0,0)},
+    position = {pos = vector(i * 17, 240)},
     renderable = {
       z = 0.3,
       draw = function(entity)
-        tile:draw(i * 17, 240)
+        tile:draw(entity.position.pos.x,entity.position.pos.y)
       end
     },
     collideObject = {
-      type = {"object", "candy"},
-      shape = HC.rectangle(i * 17 + 4, 240 + 4, 8, 8)
+      type = {"object", "chairs"},
+      shape = HC.rectangle(i * 17+2, 240+2, 12, 12),
+      event = function(entity, collider, obj, dt)
+        local vol = entity.velocity
+        local vec = vol.vec
+        local speed = vol.currentSpeed
+        entity.position.pos = entity.position.pos - 0.3*speed * vec * dt
+        if obj then
+          vol = obj.velocity
+          vec = vol.vec
+          speed = vol.currentSpeed
+          obj.position.pos = obj.position.pos - speed * vec * dt
+          obj.position.pos = obj.position.pos + 0.05*(obj.position.pos - entity.position.pos)
+        else
+          entity.position.pos = entity.position.pos - 0.7*speed * vec * dt
+          entity.position.pos = entity.position.pos + 0.05*(player.position.pos - entity.position.pos)
+          print("did I get here?")
+        end
+      end
     }
   })
 end
---]]
 
 local mapBox = world:addEntity({collideWorld = {
   type = {player=true}
@@ -144,12 +168,12 @@ local mapBox = world:addEntity({collideWorld = {
 for k, box in pairs(boxes) do
   addShape(mapBox, box)
 end
-local candyLand = world:addEntity({collideWorld = {
-  type = {player=true}
+local furnWorld = world:addEntity({collideWorld = {
+  type = {player=true, chairs=true}
 }})
---for k, candy in pairs(candies) do
-  --addInteractable(candyLand, candy)
---end
+for k, furn in pairs(furniture) do
+  addInteractable(furnWorld, furn)
+end
 
 --addInteractable(mapBox, witch)
 
@@ -196,3 +220,122 @@ world:addEntity({renderable = {
     end
   end
 }})
+
+function witchPhase1Transition(entity, phase)
+   if phase then -- phase was supplied and we should handle the actual transition
+   else -- phase was not supplied so we only need to return if we're ready to transfer
+    return entity.phases.current
+   end
+end
+function witchPhase1(witch, dt)
+    printDebug("witch phase = "..witch.boss.state)
+    local timers = witch.timers
+    if witch.boss.state == boss_states.idle then
+        witch.position.pos = vector(love.graphics.getWidth()/2, love.graphics.getHeight()/2)
+        witch.velocity.vec = vector(0,0)
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.preparing
+            timers.maxTimes[witch_timers.stateTimer] = 4
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+        end
+        witch.witch.freq = 1
+        witch.witch.amp = 5
+    elseif witch.boss.state == boss_states.preparing then
+        --Slow floating
+            --slowing formula is:
+            -- amp = (-0.5 * arctan(x-3)) + (1 - 0.625) where x is thi timer value
+        local v = 2
+        local k = 1.8
+        local w = 2
+        witch.witch.amp = (k * math.atan(timers.timers[witch_timers.stateTimer] - v)) + w
+
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.telling
+            timers.maxTimes[witch_timers.stateTimer] = 1
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+        end
+    elseif witch.boss.state == boss_states.telling then
+        --Stop for a second
+        witch.witch.amp = 0
+
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.attacking
+            timers.maxTimes[witch_timers.stateTimer] = 5
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+        end
+    elseif witch.boss.state == boss_states.attacking then
+        --fly at the player
+
+        local witchPos = witch.position.pos
+        local playerPos = getPlayer(world).position.pos
+        if witch.witch.target == nil then
+            witch.witch.target = playerPos - witchPos
+            witch.witch.target = witch.witch.target:normalized()
+        end
+
+        local timeLeft = timers.timers[witch_timers.stateTimer]
+
+        local k= 15
+        local z = 8.4
+        local w = 30
+        local speed = ((-1 * math.log(timeLeft * k) + w) * z )
+
+        printDebug("speed = "..speed)
+
+        witch.velocity.vec = witch.witch.target:clone()
+        witch.velocity.currentSpeed = math.min(speed, witch.velocity.maxSpeed)
+
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.idle
+            timers.maxTimes[witch_timers.stateTimer] = 4
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+            witch.witch.target = nil
+        end
+    end
+    --
+            if witch.witch.target ~= nil then
+                local playerPos = getPlayer(world).position.pos
+                local witchPos = witch.position.pos
+                printNotice("target = ("..witch.witch.target.x..", "..witch.witch.target.y..")")
+                printNotice("playerPos = ("..playerPos.x..", "..playerPos.y..")")
+                printNotice("witchPos = ("..witchPos.x..", "..witchPos.y..")")
+            end
+end
+local spawnWitch = function()
+    world:addEntity({
+      position = {pos = vector(love.graphics.getWidth()/2,love.graphics.getHeight()/2)},
+      boundingBox = {},
+      phases = {transitions = {witchPhase1Transition}, functions = {witchPhase1}},
+      boss = {},
+      witch = {freq = 6, amp = 5, target = nil},
+      timers = {maxTimes = {1,2}, timers = {1,2}},
+      velocity = {maxSpeed = 1000},
+      collideObject = {
+        type = {"actor", "witch"},
+        shape = HC.rectangle(300, 300, 10, 10),
+        event = function(entity, collider, obj, dt)
+          print("the witch hit you!")
+        end
+      },
+      renderable = {
+        z = 0.5,
+        draw = function(entity)
+          --for witch in pairs(world:query("witch")) do
+              local timers = entity.timers
+              local floatTimer = timers.timers[witch_timers.floatTimer]
+              local newPos = (math.sin(entity.witch.freq * floatTimer * 2 * math.pi) * entity.witch.amp) + entity.position.pos.y
+
+              if floatTimer == 0 then
+                timers.timers[witch_timers.floatTimer] = timers.maxTimes[witch_timers.floatTimer]
+              end
+
+                DrawInstance (Witch, entity.position.pos.x, newPos)
+                Witch.curr_anim = Witch.sprite.animations_names[2]
+                Witch.size_scale = 3
+
+          --end
+        end
+      }
+    })
+end
+spawnWitch()

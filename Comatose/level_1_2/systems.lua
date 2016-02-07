@@ -1,6 +1,8 @@
+
 local world = ...
 
 Player = GetInstance ("animations/PlayerSprite.lua")
+Witch = GetInstance ("animations/WitchSprite.lua")
 
 local function addInteractable(collider, obj)
   collider.collideWorld.objects[obj.collideObject.shape] = obj
@@ -28,18 +30,6 @@ local function addShape(collider, shape)
   --collider.collideWorld.objects[obj.collideObject.shape] = obj
   collider.collideWorld.world:register(shape)
 end
-
-world:addSystem("transition", {
-  update = function(self, dt)
-    for player in pairs(world:query("player")) do
-      if player.position.pos.y > 194 and player.position.pos.y < 245 then
-        if player.position.pos.x > 800 then
-          Gamestate.switch(level_1_3)
-        end
-      end
-    end
-  end
-})
 
 world:addSystem("collide",
   {update = function(self, dt)
@@ -126,7 +116,7 @@ world:addSystem("input",{
                 if (keys['d'].key.state == key_states.pressed) or (keys['d'].key.state == key_states.down) then
                     Player.curr_anim = Player.sprite.animations_names[2]
                     player.state = player_states.rolling
-                  end
+                end
 
 
                 velocity.vec = velocity.vec:normalized()
@@ -151,6 +141,7 @@ world:addSystem("stateChange", {
 -- this system updates the position components of all entities with a velocity component
 world:addSystem("movement", {
     update = function(self, dt)
+        Timer.update(dt)
         for entity in pairs(world:query("position velocity")) do
            local position = entity.position
            local vec = entity.velocity.vec
@@ -194,6 +185,50 @@ world:addSystem("render", {
           if entity.renderable.hud then cam:detach() end
           entity.renderable.draw(entity)
           if entity.renderable.hud then cam:attach() end
+        end
+    end
+})
+
+--add a "timer" system with an update callback
+-- this system updates all registered timers each tick
+world:addSystem("timer",{
+    update = function(self, dt)
+        for entity in pairs(world:query("timers")) do
+            for i in ipairs(entity.timers.maxTimes) do
+                local maxTime = entity.timers.maxTimes[i]
+                local timers = entity.timers
+                timers.timers[i] = timers.timers[i] - dt
+
+                if timers.timers[i] < 0 then
+                    timers.timers[i] = 0
+                end
+            end
+        end
+    end
+})
+
+--add a "ai" system with an update callback
+-- this system handles the calls to an enemy logic update
+world:addSystem("ai", {
+    update = function(self, dt)
+        for entity in pairs(world:query("phases boss")) do
+            local bossState = entity.boss
+            local phases = entity.phases
+
+            printDebug("ai system boss state = "..bossState.state)
+
+            if bossState.state == boss_states.transPhase then
+                phases.transitions[phases.current](entity)
+            else
+               local newPhase = phases.transitions[phases.current](entity)
+
+                if newPhase == phases.current then -- No need to change Phases
+                    phases.functions[phases.current](entity, dt)
+                else -- Phases didn't match so it's time to shift
+                    phases.current = newPhase
+                    bossState.state = boss_states.transPhase
+                end
+            end
         end
     end
 })
@@ -243,12 +278,11 @@ end
 
 world:addSystem("preformList", {
   update = function(entity, dt)
-    actions = world:query("toPerform action")
-    for toPerform in pairs(actions) do
+    for toPerform in pairs(world:query("toPerform action")) do
       world:detach(toPerform, "toPerform")
       local player = getPlayer()
       if toPerform.action.cost < player.glucose.value then
-        toPerform.action.action()
+        toPerform.action.action(toPerform)
         player.glucose.value = player.glucose.value - toPerform.action.cost
         player.insulin.value = 0.05 * player.glucose.value - toPerform.action.cost
         player.glucose.value = math.min(player.glucose.value, player.glucose.max)
@@ -258,30 +292,6 @@ world:addSystem("preformList", {
       end
     end
   end
-})
-
-world:addSystem("ai", {
-    update = function(self, dt)
-        for entity in pairs(world:query("phases boss")) do
-            local bossState = entity.boss
-            local phases = entity.phases
-
-            printDebug("ai system boss state = "..bossState.state)
-
-            if bossState.state == boss_states.transPhase then
-                phases.transitions[phases.current](entity)
-            else
-               local newPhase = phases.transitions[phases.current](entity)
-
-                if newPhase == phases.current then -- No need to change Phases
-                    phases.functions[phases.current](entity, dt)
-                else -- Phases didn't match so it's time to shift
-                    phases.current = newPhase
-                    bossState.state = boss_states.transPhase
-                end
-            end
-        end
-    end
 })
 
 world:addSystem("playerAnimation", {
