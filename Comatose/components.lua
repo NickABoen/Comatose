@@ -161,8 +161,9 @@ function witchPhase1(witch, dt)
         --fly at the player
 
         local witchPos = witch.position.pos
+        local playerPos = getPlayer().position.pos
         if witch.witch.target == nil then
-            local playerPos = getPlayer().position.pos
+            --local playerPos = getPlayer().position.pos
 
             witch.witch.target = playerPos - witchPos
             witch.witch.target = witch.witch.target:normalized()
@@ -177,7 +178,7 @@ function witchPhase1(witch, dt)
 
         printDebug("speed = "..speed)
 
-        witch.velocity.vec = witch.witch.target
+        witch.velocity.vec = witch.witch.target:clone()
         witch.velocity.currentSpeed = math.min(speed, witch.velocity.maxSpeed)
 
         if timers.timers[witch_timers.stateTimer] == 0 then
@@ -189,7 +190,11 @@ function witchPhase1(witch, dt)
     end
     --
             if witch.witch.target ~= nil then
-                printDebug("target = ("..witch.witch.target.x..", "..witch.witch.target.y..")")
+                local playerPos = getPlayer().position.pos
+                local witchPos = witch.position.pos
+                printNotice("target = ("..witch.witch.target.x..", "..witch.witch.target.y..")")
+                printNotice("playerPos = ("..playerPos.x..", "..playerPos.y..")")
+                printNotice("witchPos = ("..witchPos.x..", "..witchPos.y..")")
             end
 end
 local spawnWitch = function()
@@ -220,7 +225,7 @@ local spawnWitch = function()
                 timers.timers[witch_timers.floatTimer] = timers.maxTimes[witch_timers.floatTimer]
               end
 
-                DrawInstance (Witch, entity.position.pos.y, newPos)
+                DrawInstance (Witch, entity.position.pos.x, newPos)
                 Witch.curr_anim = Witch.sprite.animations_names[2]
                 Witch.size_scale = 3
 
