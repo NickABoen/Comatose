@@ -93,7 +93,8 @@ world:addSystem("input",{
                 love.event.quit()
             end
 
-            if player.state == player_states.neutral then
+            --if player.state == player_states.neutral then
+              if Player.curr_anim == Player.sprite.animations_names[1] then
 
                 if (keys['up'].key.state == key_states.pressed) or (keys['up'].key.state == key_states.down) then
                     velocity.vec.y = -1
@@ -113,10 +114,7 @@ world:addSystem("input",{
 
                 if (keys['d'].key.state == key_states.pressed) or (keys['d'].key.state == key_states.down) then
                   Player.curr_anim = Player.sprite.animations_names[2]
-                  Player.curr_frame = 1
-                else
-                  Player.curr_anim = Player.sprite.animations_names[1]
-                  Player.curr_frame = 1
+                  player.state = player_states.rolling
                 end
 
                 velocity.vec = velocity.vec:normalized()
@@ -251,8 +249,18 @@ world:addSystem("preformList", {
 world:addSystem("playerAnimation", {
   update = function(entity, dt)
     actions = world:query("animation player")
-      if Player.sprite.curr_anim == Player.sprite.animations_names.rolling then
+    player = getPlayer()
+
+    if Player.curr_anim == Player.sprite.animations_names[2] then
+      if Player.curr_frame < 6 then
+        player.velocity.currentSpeed = player.velocity.currentSpeed + 10
         UpdateInstance(Player, dt)
+      else
+        Player.curr_frame = 1
+        Player.curr_anim = Player.sprite.animations_names[1]
+        player.state = player_states.neutral
+        player.velocity.currentSpeed = player.velocity.maxSpeed
       end
+    end
   end
 })
