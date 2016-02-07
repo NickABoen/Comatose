@@ -11,9 +11,10 @@ function Tile:draw(...)
 end
 
 local function convertNum(num, width, height, spacing, px, py)
+  --print(num, width, height, spacing, px, py)
   num = num - 1
   local y = math.floor(num / width)
-  local x = num % width
+  local x = (num % width)
   local ix = spacing * x + px * x
   local iy = spacing * y + py * y
   return ix, iy
@@ -64,7 +65,7 @@ local function makeBatch(out, batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw,
         local ix, iy = convertNum(data[loc], tsw, tsw, spacing, tx, ty)
         --print(tsw, tsw, ix, iy, tx, ty, sx, sy)
         local q = love.graphics.newQuad(ix, iy, tx, ty, sx, sy)
-        ix, iy = convertNum(loc, mw, mh, 0, tx, ty)
+        ix, iy = convertNum(loc, mw, mh, -1, tx, ty)
         if out.tileboxs[data[loc]] then
           --print("adding to hboxs", data[loc], ix, iy)
           local hbox = copyRect(out.tileboxs[data[loc]])
@@ -72,6 +73,7 @@ local function makeBatch(out, batch, data, mw, mh, tx, ty, sx, sy, spacing, tsw,
           hbox:move(ix, iy)
           table.insert(hboxs, hbox)
         end
+        --print(ix, iy)
         batch:add(q, ix, iy)
       end
       loc = loc + 1

@@ -5,6 +5,7 @@ world:addComponent("velocity", { maxSpeed = 100, currentSpeed = 100, vec = vecto
 world:addComponent("boundingBox", {width = 10, height = 10})
 world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
+world:addComponent("witch", {state = player_states.neutral})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 world:addComponent("damage", {amount = 0})
@@ -17,6 +18,12 @@ world:addComponent("phases",{current = 1, transitions = {}, functions  = {}})
 world:addComponent("boss", {state = boss_states.idle})
 world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
 world:addComponent("collideWorld", {type = {}, world = HC.new(), objects = {}})
+world:addComponent("health", {value = 0, min = 0, max = 1500})
+world:addComponent("hunger", {value = 100, min = 0, max = 400})
+world:addComponent("glucose", {value = 100, min = 0, max = 400})
+world:addComponent("insulin", {value = 10, min = 0, max = 20})
+world:addComponent("action", {cost = 1, action = function() end})
+world:addComponent("toPerform", {})
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
@@ -41,10 +48,19 @@ local spaceKey = world:addEntity({
 local escapeKey = world:addEntity({
     key = {id = 'escape'}
 })
+local dKey = world:addEntity({
+    key = {id = 'd'}
+})
 
 -- create a player entity at position (100, 100)
 local player = world:addEntity({
-    position = {pos = vector(200,200)},
+
+    glucose = {value = 90},
+    hunger = {value = 90},
+    insulin = {value = 10},
+    health = {value = 1500},
+    position = {pos = vector(600,445)},
+
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
     hasInput = {},
@@ -64,13 +80,24 @@ local player = world:addEntity({
     renderable = {
       z = 0.5,
       draw = function(player)
-        love.graphics.rectangle(
-            "fill",
-            player.position.pos.x,
-            player.position.pos.y,
-            player.boundingBox.width,
-            player.boundingBox.height
-        )
+        DrawInstance (Player, player.position.pos.x, player.position.pos.y)
+        Player.size_scale = 2
+      end
+    }
+})
+
+-- create a player entity at position (200, 200)
+local witch = world:addEntity({
+    position = {pos = vector(200,200)},
+    velocity = {maxSpeed = 100, currentSpeed = 100},
+    boundingBox = {},
+    witch = {state = player_states.neutral},
+    renderable = {
+      z = 0.5,
+      draw = function(witch)
+        DrawInstance (Witch, witch.position.pos.x, witch.position.pos.y)
+        Witch.curr_anim = Witch.sprite.animations_names[2]
+        Witch.size_scale = 4
       end
     }
 })
@@ -81,7 +108,7 @@ local spawnWitch = function()
     })
 end
 
-local layers, tiles, boxes = Loader.load('Maps', 'testmap')
+local layers, tiles, boxes = Loader.load('Maps', 'level1_1')
 --add the map
 world:addEntity({renderable = {
   draw = function(entity)
