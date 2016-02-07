@@ -5,11 +5,12 @@ world:addComponent("velocity", { maxSpeed = 100, currentSpeed = 100, vec = vecto
 world:addComponent("boundingBox", {width = 10, height = 10})
 world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
-world:addComponent("witch", {state = player_states.neutral})
+--world:addComponent("witch", {state = player_states.neutral})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 world:addComponent("damage", {amount = 0})
 world:addComponent("timers", {maxTimes = {}, timers = {}})
+world:addComponent("witch",{hitPlayer = false, hitWall = false, freq = 1, amp = 1, speed = 100, target = vector(0,0)})
 -- phase transitions are functions. Without parameter (besides entity) they should return if phase 
 -- change criteria has been met, otherwise if a new phase is passed they supply the 
 -- transition function to make the change phase functions deal with behavior that occurs 
@@ -85,6 +86,7 @@ local player = world:addEntity({
     }
 })
 
+--[[
 -- create a player entity at position (200, 200)
 local witch = world:addEntity({
     position = {pos = vector(200,200)},
@@ -101,7 +103,7 @@ local witch = world:addEntity({
       end
     }
 })
-
+--]]
 
 local layers, tiles, boxes = Loader.load('Maps', 'level1_1')
 --add the map
@@ -113,12 +115,81 @@ world:addEntity({renderable = {
   end
 }})
 
+function witchPhase1Transition(entity, phase)
+   if phase then -- phase was supplied and we should handle the actual transition
+   else -- phase was not supplied so we only need to return if we're ready to transfer
+    return entity.phases.current
+   end
+end
+function witchPhase1(witch, dt)
+    printDebug("witch phase = "..witch.boss.state)
+    local timers = witch.timers
+    if witch.boss.state == boss_states.idle then
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.preparing
+            timers.maxTimes[witch_timers.stateTimer] = 4
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+        end
+        witch.witch.freq = 1
+        witch.witch.amp = 5
+    elseif witch.boss.state == boss_states.preparing then
+        --Slow floating
+            --slowing formula is:
+            -- amp = (-0.5 * arctan(x-3)) + (1 - 0.625) where x is thi timer value
+        local v = 2
+        local k = 1.8
+        local w = 2
+        witch.witch.amp = (k * math.atan(timers.timers[witch_timers.stateTimer] - v)) + w
+
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.telling
+            timers.maxTimes[witch_timers.stateTimer] = 1
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+        end
+    elseif witch.boss.state == boss_states.telling then
+        --Stop for a second
+        witch.witch.amp = 0
+
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.attacking
+            timers.maxTimes[witch_timers.stateTimer] = 10 
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+            witch.witch.target = witch.position.pos
+        end
+    elseif witch.boss.state == boss_states.telling then
+        --fly at the player
+        local playerPos = getPlayer().position.pos
+
+        local witchPos = witch.position.pos
+
+        local diff = vector(0,0)
+        if witch.witch.target == witch.position.pos then
+            witch.witch.target = playerPos
+            diff = withPos - witch.witch.target
+        end
+
+        diff = diff:normalized()
+        
+        local k = 9
+        local z = 0.2
+        local w = 10
+        local speed = ((-1 * math.log(timers.timers[witch_timers.stateTimer]) * k) + w ) * z * dt
+
+        witch.velocity.vec = diff
+        witch.velocity.currentSpeed = speed
+        local diff = witchPos - playerPos
+    end
+    --
+        
+end
 local spawnWitch = function()
     world:addEntity({
       position = {pos = vector(love.graphics.getWidth()/2,love.graphics.getHeight()/2)},
       boundingBox = {},
-      phases = {},
-      timers = {maxTimes = {1}, timers = {1}},
+      phases = {transitions = {witchPhase1Transition}, functions = {witchPhase1}},
+      boss = {},
+      witch = {freq = 6, amp = 5},
+      timers = {maxTimes = {1,2}, timers = {1,2}},
       velocity = {},
       collideObject = {
         type = {"actor", "witch"},
@@ -130,35 +201,25 @@ local spawnWitch = function()
       renderable = {
         z = 0.5,
         draw = function(entity)
-          local timers = entity.timers
-          local floatTimer = timers.timers[witch_timers.floatTimer]
-          local newPos = (math.sin(floatTimer * 2 * math.pi) * 5) + entity.position.pos.y
+          --for witch in pairs(world:query("witch")) do
+              local timers = entity.timers
+              local floatTimer = timers.timers[witch_timers.floatTimer]
+              local newPos = (math.sin(entity.witch.freq * floatTimer * 2 * math.pi) * entity.witch.amp) + entity.position.pos.y
 
-          if floatTimer == 0 then
-            timers.timers[witch_timers.floatTimer] = timers.maxTimes[witch_timers.floatTimer]
-          end
+              if floatTimer == 0 then
+                timers.timers[witch_timers.floatTimer] = timers.maxTimes[witch_timers.floatTimer]
+              end
 
-          love.graphics.rectangle(
-              "fill",
-              entity.position.pos.x,
-              --entity.position.pos.y,
-              newPos,
-              entity.boundingBox.width,
-              entity.boundingBox.height
-          )
+                DrawInstance (Witch, entity.position.pos.y, newPos)
+                Witch.curr_anim = Witch.sprite.animations_names[2]
+                Witch.size_scale = 3
+
+          --end
         end
       }
     })
 end
 spawnWitch()
-function witchPhase1Transition(entity, phase)
-   if phase then -- phase was supplied and we should handle the actual transition
-   else -- phase was not supplied so we only need to return if we're ready to transfer
-   end
-end
-function witchPhase1()
-    
-end
 
 local mapBox = world:addEntity({collideWorld = {
   type = {player=true}

@@ -34,9 +34,10 @@ end
 -- useful "enums"
 player_states = {neutral = "neutral", rolling = "rolling"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
-boss_states = {attacking = 'attacking', idle = 'idle', transPhase = 'transPhase'}
+boss_states = {preparing = 'preparing', telling = 'telling', attacking = 'attacking', 
+                idle = 'idle', transPhase = 'transPhase'}
 timer_states = {stop = 'stop', restart = 'restart'}
-witch_timers = {floatTimer = 1}
+witch_timers = {floatTimer = 1, stateTimer = 2}
 
 require 'systems'
 require "AnimatedSprite"
@@ -50,8 +51,8 @@ function love.load()
   printNotice('Trace system online.', trace.styles.green)
   --love.graphics.setBackgroundColor(0, 255, 0)
   --love.graphics.setBlendMode("alpha")
-  cam = Camera(100, 100)
-  cam:zoom(2.5)
+  cam = Camera()
+  cam:zoom(1)
 end
 
 function love.update(dt)

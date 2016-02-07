@@ -138,7 +138,7 @@ world:addSystem("movement", {
         end
         for entity in pairs(world:query("player")) do
           --printDebug("player moved cammera")
-          cam:lookAt(math.ceil(entity.position.pos.x), math.ceil(entity.position.pos.y))
+          --cam:lookAt(math.ceil(entity.position.pos.x), math.ceil(entity.position.pos.y))
         end
     end
 })
@@ -186,21 +186,23 @@ world:addSystem("timer",{
 --add a "ai" system with an update callback
 -- this system handles the calls to an enemy logic update
 world:addSystem("ai", {
-    update = function(self)
+    update = function(self, dt)
         for entity in pairs(world:query("phases boss")) do
             local bossState = entity.boss
             local phases = entity.phases
 
+            printDebug("ai system boss state = "..bossState.state)
+
             if bossState.state == boss_states.transPhase then
                 phases.transitions[phases.current](entity)
             else
-                local newPhase = phases.transitions[phases.current](entity)
+               local newPhase = phases.transitions[phases.current](entity)
 
                 if newPhase == phases.current then -- No need to change Phases
-                    phases.functions[phases.current](entity)
+                    phases.functions[phases.current](entity, dt)
                 else -- Phases didn't match so it's time to shift
                     phases.current = newPhase
-                    bossState.state = bosses_state.transPhase
+                    bossState.state = boss_states.transPhase
                 end
             end
         end
