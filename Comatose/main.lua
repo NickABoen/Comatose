@@ -7,6 +7,7 @@ vector = require('hump/vector')
 require('TiledLoader')
 Secs = require('secs')
 world = Secs.new()
+HC = require 'HC'
 require 'trace'
 
 local fps
@@ -27,7 +28,6 @@ function printFPS()
         love.graphics.printf("Current FPS: " .. tostring(love.timer.getFPS()), 0,0, love.graphics.getWidth(), 'right')
     end
 end
-
 
 -- useful "enums"
 player_states = {neutral = "neutral", rolling = "rolling"}

@@ -1,4 +1,40 @@
 
+local function typeMatch(set, types)
+    for k, v in pairs(types) do
+      if set[v] then return true end
+    end
+    return false
+end
+
+
+function addInteractable(collider, obj)
+  collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(obj.collideObject.shape)
+end
+
+function addShape(collider, shape)
+  --collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(shape)
+end
+
+world:addSystem("collide",
+  {update = function(self, dt)
+    --print("updating collision")
+    for collider in pairs(world:query("collideWorld")) do
+      --print("going though worlds")
+      for entity in pairs(world:query("collideObject position")) do
+        --print("going though objects")
+        for shape, delta in pairs(collider.collideWorld.world:collisions(entity.collideObject.shape)) do
+          if typeMatch(collider.collideWorld.type, entity.collideObject.type) then
+            --print("found collision")
+            --move them away by the current vector
+            entity.collideObject.event(entity, collider, collider.collideWorld.objects[shape], dt)
+          end
+        end
+      end
+    end
+  end})
+
 -- adding an input system
 -- this system will handle processing user input
 world:addSystem("input",{
@@ -57,7 +93,7 @@ world:addSystem("input",{
                 else
                     velocity.vec.x = 0
                 end
-            
+
                 velocity.vec = velocity.vec:normalized()
 
                 if keys['space'].key.state == key_states.pressed then
@@ -83,6 +119,12 @@ world:addSystem("movement", {
 
            position.pos = position.pos + (vec * speed * dt)
         end
+        for entity in pairs(world:query("position collideObject")) do
+          local bx, by, bx2, by2 = entity.collideObject.shape:bbox()
+          local bw, bh = bx2 - bx, by2 - by
+          local pos = entity.position.pos
+          entity.collideObject.shape:moveTo(pos.x + bw/2, pos.y + bh/2)
+        end
     end
 })
 
@@ -107,4 +149,3 @@ world:addSystem("render", {
         end
     end
 })
-
