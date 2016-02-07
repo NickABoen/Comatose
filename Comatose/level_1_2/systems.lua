@@ -32,9 +32,9 @@ end
 world:addSystem("transition", {
   update = function(self, dt)
     for player in pairs(world:query("player")) do
-      if player.position.pos.x > 224 and player.position.pos.x < 260 then
-        if player.position.pos.y < 180 then
-          Gamestate.switch(level_1_2)
+      if player.position.pos.y > 194 and player.position.pos.y < 245 then
+        if player.position.pos.x > 800 then
+          Gamestate.switch(level_1_3)
         end
       end
     end

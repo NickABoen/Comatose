@@ -63,7 +63,7 @@ local player = world:addEntity({
     hunger = {value = 90},
     insulin = {value = 10},
     health = {value = 1500},
-    position = {pos = vector(545,240)},
+    position = {pos = vector(200,200)},
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
     hasInput = {},

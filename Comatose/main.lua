@@ -111,6 +111,8 @@ function level_1_2:draw()
   love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
   love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
   love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
+  love.graphics.printf("x: " .. player.position.pos.x, 0, 100, love.graphics.getWidth(), 'right')
+  love.graphics.printf("y: " .. player.position.pos.y, 0, 120, love.graphics.getWidth(), 'right')
 end
 
 level_1_3 = {}
@@ -141,5 +143,5 @@ function love.load()
   cam.smoother = Camera.smooth.linear(1000)
   --init the game states
   Gamestate.registerEvents()
-  Gamestate.switch(level_1_3)
+  Gamestate.switch(menu)
 end
