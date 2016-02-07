@@ -116,7 +116,7 @@ world:addSystem("input",{
                 if (keys['d'].key.state == key_states.pressed) or (keys['d'].key.state == key_states.down) then
                     Player.curr_anim = Player.sprite.animations_names[2]
                     player.state = player_states.rolling
-                  end
+                end
 
 
                 velocity.vec = velocity.vec:normalized()
@@ -196,7 +196,7 @@ world:addSystem("timer",{
         for entity in pairs(world:query("timers")) do
             for i in ipairs(entity.timers.maxTimes) do
                 local maxTime = entity.timers.maxTimes[i]
-                local timers = entity.timers 
+                local timers = entity.timers
                 timers.timers[i] = timers.timers[i] - dt
 
                 if timers.timers[i] < 0 then
@@ -300,8 +300,11 @@ world:addSystem("playerAnimation", {
     player = getPlayer()
 
     if Player.curr_anim == Player.sprite.animations_names[2] then
-      if Player.curr_frame < 6 then
-        player.velocity.currentSpeed = player.velocity.currentSpeed + 10
+      if Player.curr_frame < 3  and player.glucose.value > 5 then
+        if Player.curr_frame == 1 then
+          player.velocity.currentSpeed = player.velocity.currentSpeed + 20
+          player.glucose.value = player.glucose.value - 1
+        end
         UpdateInstance(Player, dt)
       else
         Player.curr_frame = 1
