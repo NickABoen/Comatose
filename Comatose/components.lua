@@ -16,6 +16,8 @@ world:addComponent("glucose", {value = 100, min = 0, max = 400})
 world:addComponent("insulin", {value = 10, min = 0, max = 20})
 world:addComponent("action", {cost = 1, action = function() end})
 world:addComponent("toPerform", {})
+world:addComponent("animation", {})
+
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
@@ -56,6 +58,7 @@ local player = world:addEntity({
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
     hasInput = {},
+    animation = {},
     player = {state = player_states.neutral},
     collideObject = {
       type = {"actor", "player"},
@@ -83,6 +86,7 @@ local witch = world:addEntity({
     position = {pos = vector(200,200)},
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
+    animation = {},
     witch = {state = player_states.neutral},
     renderable = {
       z = 0.5,

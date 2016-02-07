@@ -99,17 +99,20 @@ world:addSystem("input",{
                 end
 
                 if (keys['d'].key.state == key_states.pressed) or (keys['d'].key.state == key_states.down) then
+                  player.state = player_states.rolling
+                  print(player.state)
                   Player.curr_anim = Player.sprite.animations_names[2]
                   Player.curr_frame = 1
                 else
                   Player.curr_anim = Player.sprite.animations_names[1]
-                  Player.curr_frame = 1
                 end
 
                 velocity.vec = velocity.vec:normalized()
 
                 if keys['space'].key.state == key_states.pressed then
                     player.state = player_states.rolling
+                    Player.curr_anim = Player.sprite.animations_names[2]
+                    Player.curr_frame = 1
                 end
 
             elseif player.state == player_states.rolling then
@@ -224,5 +227,14 @@ world:addSystem("preformList", {
         player.insulin.value = math.max(player.insulin.value, player.insulin.min)
       end
     end
+  end
+})
+
+world:addSystem("playerAnimation", {
+  update = function(entity, dt)
+    actions = world:query("animation")
+      if Player.sprite.curr_anim == Player.sprite.animations_names.rolling then
+        UpdateInstance(Player, dt)
+      end
   end
 })
