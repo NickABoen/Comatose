@@ -11,7 +11,7 @@ Secs = require('secs')
 HC = require 'HC'
 require 'trace'
 require 'util'
-require "AnimatedSprite"
+require "animations/AnimatedSprite"
 
 function getPlayer(world)
   for player in pairs(world:query("player")) do
