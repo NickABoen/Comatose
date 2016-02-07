@@ -1,4 +1,18 @@
 
+local world = ...
+
+Player = GetInstance ("animations/PlayerSprite.lua")
+
+local function addInteractable(collider, obj)
+  collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(obj.collideObject.shape)
+end
+
+local function addShape(collider, shape)
+  --collider.collideWorld.objects[obj.collideObject.shape] = obj
+  collider.collideWorld.world:register(shape)
+end
+
 local function typeMatch(set, types)
     for k, v in pairs(types) do
       if set[v] then return true end
@@ -6,13 +20,12 @@ local function typeMatch(set, types)
     return false
 end
 
-
-function addInteractable(collider, obj)
+local function addInteractable(collider, obj)
   collider.collideWorld.objects[obj.collideObject.shape] = obj
   collider.collideWorld.world:register(obj.collideObject.shape)
 end
 
-function addShape(collider, shape)
+local function addShape(collider, shape)
   --collider.collideWorld.objects[obj.collideObject.shape] = obj
   collider.collideWorld.world:register(shape)
 end
@@ -40,7 +53,6 @@ world:addSystem("collide",
 world:addSystem("input",{
     update = function(self, dt)
         local keys = {}
-
         for key in pairs(world:query("key"))do
             -- update old value
             key.key.was = key.key.is
@@ -63,7 +75,6 @@ world:addSystem("input",{
                 key.key.state = key_states.down
             end
 
-
             keys[key.key.id] = key
         end
 
@@ -72,16 +83,14 @@ world:addSystem("input",{
             local currentSpeed = entity.velocity.currentSpeed
             local player = entity.player
 
-            if player == nil then
-              player = entity.witch
-            end
+
 
             if keys['escape'].key.state == key_states.released then
                 love.event.quit()
             end
 
-            if player.state == player_states.neutral then
-
+            --if player.state == player_states.neutral then
+              if Player.curr_anim == Player.sprite.animations_names[1] then
                 if (keys['up'].key.state == key_states.pressed) or (keys['up'].key.state == key_states.down) then
                     velocity.vec.y = -1
                 elseif (keys['down'].key.state == key_states.pressed) or (keys['down'].key.state == key_states.down) then
@@ -100,10 +109,7 @@ world:addSystem("input",{
 
                 if (keys['d'].key.state == key_states.pressed) or (keys['d'].key.state == key_states.down) then
                   Player.curr_anim = Player.sprite.animations_names[2]
-                  Player.curr_frame = 1
-                else
-                  Player.curr_anim = Player.sprite.animations_names[1]
-                  Player.curr_frame = 1
+                  player.state = player_states.rolling
                 end
 
                 velocity.vec = velocity.vec:normalized()
@@ -113,17 +119,22 @@ world:addSystem("input",{
                 end
 
             elseif player.state == player_states.rolling then
-                -- the player should have no or limited actions in this state
+              -- the player should have no or limited actions in this state
             end
         end
     end
 })
 
 
+world:addSystem("stateChange", {
+
+})
+
 -- add a "movement" system with a update callback
 -- this system updates the position components of all entities with a velocity component
 world:addSystem("movement", {
     update = function(self, dt)
+        Timer.update(dt)
         for entity in pairs(world:query("position velocity")) do
            local position = entity.position
            local vec = entity.velocity.vec
@@ -137,8 +148,12 @@ world:addSystem("movement", {
           entity.collideObject.shape:moveTo(pos.x + bw/2, pos.y + bh/2)
         end
         for entity in pairs(world:query("player")) do
+          local vec = entity.velocity.vec
+          if math.abs(vec.x) > 0.001 or math.abs(vec.y) > 0.001 then
+            entity.glucose.value = entity.glucose.value - 0.33 * dt
+          end
           --printDebug("player moved cammera")
-          --cam:lookAt(math.ceil(entity.position.pos.x), math.ceil(entity.position.pos.y))
+          cam:lookAt(math.ceil(entity.position.pos.x), math.ceil(entity.position.pos.y))
         end
     end
 })
@@ -161,50 +176,6 @@ world:addSystem("render", {
         --now draw all of them
         for i, entity in ipairs(rens) do
           entity.renderable.draw(entity)
-        end
-    end
-})
-
---add a "timer" system with an update callback
--- this system updates all registered timers each tick
-world:addSystem("timer",{
-    update = function(self, dt)
-        for entity in pairs(world:query("timers")) do
-            for i in ipairs(entity.timers.maxTimes) do
-                local maxTime = entity.timers.maxTimes[i]
-                local timers = entity.timers 
-                timers.timers[i] = timers.timers[i] - dt
-
-                if timers.timers[i] < 0 then
-                    timers.timers[i] = 0
-                end
-            end
-        end
-    end
-})
-
---add a "ai" system with an update callback
--- this system handles the calls to an enemy logic update
-world:addSystem("ai", {
-    update = function(self, dt)
-        for entity in pairs(world:query("phases boss")) do
-            local bossState = entity.boss
-            local phases = entity.phases
-
-            printDebug("ai system boss state = "..bossState.state)
-
-            if bossState.state == boss_states.transPhase then
-                phases.transitions[phases.current](entity)
-            else
-               local newPhase = phases.transitions[phases.current](entity)
-
-                if newPhase == phases.current then -- No need to change Phases
-                    phases.functions[phases.current](entity, dt)
-                else -- Phases didn't match so it's time to shift
-                    phases.current = newPhase
-                    bossState.state = boss_states.transPhase
-                end
-            end
         end
     end
 })
@@ -246,7 +217,7 @@ world:addSystem("performHinders", {
   end
 })
 
-function getPlayer()
+local function getPlayer()
   for player in pairs(world:query("player")) do
     return player
   end
@@ -254,18 +225,36 @@ end
 
 world:addSystem("preformList", {
   update = function(entity, dt)
-    actions = world:query("toPerform action")
-    for toPerform in pairs(actions) do
+    for toPerform in pairs(world:query("toPerform action")) do
       world:detach(toPerform, "toPerform")
       local player = getPlayer()
       if toPerform.action.cost < player.glucose.value then
-        toPerform.action.action()
+        toPerform.action.action(toPerform)
         player.glucose.value = player.glucose.value - toPerform.action.cost
         player.insulin.value = 0.05 * player.glucose.value - toPerform.action.cost
         player.glucose.value = math.min(player.glucose.value, player.glucose.max)
         player.glucose.value = math.max(player.glucose.value, player.glucose.min)
         player.insulin.value = math.min(player.insulin.value, player.insulin.max)
         player.insulin.value = math.max(player.insulin.value, player.insulin.min)
+      end
+    end
+  end
+})
+
+world:addSystem("playerAnimation", {
+  update = function(entity, dt)
+    actions = world:query("animation player")
+    player = getPlayer()
+
+    if Player.curr_anim == Player.sprite.animations_names[2] then
+      if Player.curr_frame < 6 then
+        player.velocity.currentSpeed = player.velocity.currentSpeed + 10
+        UpdateInstance(Player, dt)
+      else
+        Player.curr_frame = 1
+        Player.curr_anim = Player.sprite.animations_names[1]
+        player.state = player_states.neutral
+        player.velocity.currentSpeed = player.velocity.maxSpeed
       end
     end
   end
