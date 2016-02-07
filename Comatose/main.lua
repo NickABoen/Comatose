@@ -3,6 +3,7 @@
 --------------------------------------------------
 local debug = true
 
+Camera = require('hump/camera')
 vector = require('hump/vector')
 require('TiledLoader')
 Secs = require('secs')
@@ -38,7 +39,12 @@ require 'components'
 
 
 function love.load()
+  print(love.graphics.getBlendMode())
   printNotice('Trace system online.', trace.styles.green)
+  --love.graphics.setBackgroundColor(0, 255, 0)
+  --love.graphics.setBlendMode("alpha")
+  cam = Camera(100, 100)
+  cam:zoom(2.5)
 end
 
 function love.update(dt)
@@ -46,7 +52,9 @@ function love.update(dt)
 end
 
 function love.draw(dt)
+    cam:attach()
     world:draw()
+    cam:detach()
     trace.draw()
     printFPS()
     local player = getPlayer()
