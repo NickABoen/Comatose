@@ -100,7 +100,7 @@ local player = world:addEntity({
     }
 })
 
-local layers, tiles, boxes = Loader.load('Maps', 'level1_3')
+local layers, tiles, boxes = Loader.load('Maps', 'level1_2')
 --add the map
 world:addEntity({renderable = {
   draw = function(entity)
@@ -165,18 +165,20 @@ end
 local mapBox = world:addEntity({collideWorld = {
   type = {player=true}
 }})
+
 for k, box in pairs(boxes) do
   addShape(mapBox, box)
 end
+
 local furnWorld = world:addEntity({collideWorld = {
   type = {player=true, chairs=true}
 }})
+
 for k, furn in pairs(furniture) do
   addInteractable(furnWorld, furn)
 end
 
 --addInteractable(mapBox, witch)
-
 if debug then
   world:addEntity({renderable = {
     z = 0.7,
@@ -227,11 +229,12 @@ function witchPhase1Transition(entity, phase)
     return entity.phases.current
    end
 end
+
 function witchPhase1(witch, dt)
     printDebug("witch phase = "..witch.boss.state)
     local timers = witch.timers
     if witch.boss.state == boss_states.idle then
-        witch.position.pos = vector(love.graphics.getWidth()/2, love.graphics.getHeight()/2)
+        witch.position.pos = vector(300,220)
         witch.velocity.vec = vector(0,0)
         if timers.timers[witch_timers.stateTimer] == 0 then
             witch.boss.state = boss_states.preparing
@@ -260,47 +263,23 @@ function witchPhase1(witch, dt)
 
         if timers.timers[witch_timers.stateTimer] == 0 then
             witch.boss.state = boss_states.attacking
-            timers.maxTimes[witch_timers.stateTimer] = 5
+            timers.maxTimes[witch_timers.stateTimer] = 3
             timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
         end
     elseif witch.boss.state == boss_states.attacking then
-        --fly at the player
-
-        local witchPos = witch.position.pos
-        local playerPos = getPlayer(world).position.pos
-        if witch.witch.target == nil then
-            witch.witch.target = playerPos - witchPos
-            witch.witch.target = witch.witch.target:normalized()
-        end
-
-        local timeLeft = timers.timers[witch_timers.stateTimer]
-
-        local k= 15
-        local z = 8.4
-        local w = 30
-        local speed = ((-1 * math.log(timeLeft * k) + w) * z )
-
-        printDebug("speed = "..speed)
-
-        witch.velocity.vec = witch.witch.target:clone()
-        witch.velocity.currentSpeed = math.min(speed, witch.velocity.maxSpeed)
-
-        if timers.timers[witch_timers.stateTimer] == 0 then
-            witch.boss.state = boss_states.idle
-            timers.maxTimes[witch_timers.stateTimer] = 4
-            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
-            witch.witch.target = nil
-        end
+      witch.velocity.currentSpeed = 150
+      witch.velocity.vec.x = 1
     end
-    --
-            if witch.witch.target ~= nil then
-                local playerPos = getPlayer(world).position.pos
-                local witchPos = witch.position.pos
-                printNotice("target = ("..witch.witch.target.x..", "..witch.witch.target.y..")")
-                printNotice("playerPos = ("..playerPos.x..", "..playerPos.y..")")
-                printNotice("witchPos = ("..witchPos.x..", "..witchPos.y..")")
-            end
+
+    if witch.witch.target ~= nil then
+        local playerPos = getPlayer(world).position.pos
+        local witchPos = witch.position.pos
+        printNotice("target = ("..witch.witch.target.x..", "..witch.witch.target.y..")")
+        printNotice("playerPos = ("..playerPos.x..", "..playerPos.y..")")
+        printNotice("witchPos = ("..witchPos.x..", "..witchPos.y..")")
+    end
 end
+
 local spawnWitch = function()
     world:addEntity({
       position = {pos = vector(love.graphics.getWidth()/2,love.graphics.getHeight()/2)},
@@ -320,20 +299,17 @@ local spawnWitch = function()
       renderable = {
         z = 0.5,
         draw = function(entity)
-          --for witch in pairs(world:query("witch")) do
-              local timers = entity.timers
-              local floatTimer = timers.timers[witch_timers.floatTimer]
-              local newPos = (math.sin(entity.witch.freq * floatTimer * 2 * math.pi) * entity.witch.amp) + entity.position.pos.y
+          local timers = entity.timers
+          local floatTimer = timers.timers[witch_timers.floatTimer]
+          local newPos = (math.sin(entity.witch.freq * floatTimer * 2 * math.pi) * entity.witch.amp) + entity.position.pos.y
 
-              if floatTimer == 0 then
-                timers.timers[witch_timers.floatTimer] = timers.maxTimes[witch_timers.floatTimer]
-              end
+          if floatTimer == 0 then
+            timers.timers[witch_timers.floatTimer] = timers.maxTimes[witch_timers.floatTimer]
+          end
 
-                DrawInstance (Witch, entity.position.pos.x, newPos)
-                Witch.curr_anim = Witch.sprite.animations_names[2]
-                Witch.size_scale = 3
-
-          --end
+            DrawInstance (Witch, entity.position.pos.x, newPos)
+            Witch.curr_anim = Witch.sprite.animations_names[2]
+            Witch.size_scale = 3
         end
       }
     })

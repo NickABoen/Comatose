@@ -31,6 +31,18 @@ local function addShape(collider, shape)
   collider.collideWorld.world:register(shape)
 end
 
+world:addSystem("transition", {
+  update = function(self, dt)
+    for player in pairs(world:query("player")) do
+      if player.position.pos.y > 194 and player.position.pos.y < 245 then
+        if player.position.pos.x > 800 then
+          Gamestate.switch(level_1_3)
+        end
+      end
+    end
+  end
+})
+
 world:addSystem("collide",
   {update = function(self, dt)
     --print("updating collision")
@@ -215,7 +227,7 @@ world:addSystem("ai", {
             local bossState = entity.boss
             local phases = entity.phases
 
-            printDebug("ai system boss state = "..bossState.state)
+            --printDebug("ai system boss state = "..bossState.state)
 
             if bossState.state == boss_states.transPhase then
                 phases.transitions[phases.current](entity)
