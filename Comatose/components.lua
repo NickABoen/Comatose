@@ -7,6 +7,7 @@ world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
+world:addComponent("phases",{currentPhase = 1, phaseFuncs = {}})
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
@@ -52,6 +53,12 @@ local player = world:addEntity({
       end
     }
 })
+
+local spawnWitch = function()
+    world:addEntity({
+        
+    })
+end
 
 local layers, tiles, boxes = Loader.load('Maps', 'testmap')
 --add the map
