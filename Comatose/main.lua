@@ -6,6 +6,7 @@ debug = true
 Gamestate = require('hump/gamestate')
 Camera = require('hump/camera')
 vector = require('hump/vector')
+Timer = require('hump/timer')
 require('TiledLoader')
 Secs = require('secs')
 HC = require 'HC'
@@ -22,6 +23,7 @@ end
 --read in the worlds
 local leadinWorld = require('leadin/leadin')
 local menuWorld = require('menu/menu')
+local testWorld = require('PushTest/pushtest')
 
 --make the game states (ensure these are global)
 --here is the code for the leadin
@@ -36,6 +38,23 @@ function leadin:draw()
   trace.draw()
   printFPS()
   local player = getPlayer(leadinWorld)
+  love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
+  love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
+  love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
+  love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
+end
+
+pushtest = {}
+function pushtest:update(dt)
+  testWorld:update(dt)
+end
+function pushtest:draw()
+  cam:attach()
+  testWorld:draw()
+  cam:detach()
+  trace.draw()
+  printFPS()
+  local player = getPlayer(testWorld)
   love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
   love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
   love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
@@ -64,9 +83,10 @@ function love.load()
 
   printNotice('Trace system online.', trace.styles.green)
   local width, height = love.graphics.getDimensions()
-  cam = Camera(width/8 + 10, height/8 + 10)
-  cam:zoom(3.75)
+  cam = Camera(100, 100)
+  cam:zoom(2)
+  cam.smoother = Camera.smooth.damped(1000)
   --init the game states
   Gamestate.registerEvents()
-  Gamestate.switch(menu)
+  Gamestate.switch(pushtest)
 end
