@@ -1,7 +1,7 @@
 local world = Secs.new()
 
 -- useful "enums"
-player_states = {neutral = "neutral", rolling = "rolling"}
+player_states = {neutral = "neutral", rolling = "rolling", finish_roll = "finish_roll"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
 
 

@@ -16,7 +16,15 @@ world:addComponent("velocity", { maxSpeed = 100, currentSpeed = 100, vec = vecto
 world:addComponent("boundingBox", {width = 10, height = 10})
 world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
-world:addComponent("witch", {state = player_states.neutral})
+world:addComponent("damage", {amount = 0})
+world:addComponent("timers", {maxTimes = {}, timers = {}})
+world:addComponent("witch", {hitPlayer = false, hitWall = false, freq = 1, amp = 1, speed = 100, target = nil})
+-- phase transitions are functions. Without parameter (besides entity) they should return if phase
+-- change criteria has been met, otherwise if a new phase is passed they supply the
+-- transition function to make the change phase functions deal with behavior that occurs
+-- from substates and reactions to players
+world:addComponent("phases",{current = 1, transitions = {}, functions  = {}})
+world:addComponent("boss", {state = boss_states.idle})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end, hud = false})
 world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
@@ -29,6 +37,7 @@ world:addComponent("action", {cost = 1, action = function() end})
 world:addComponent("food", {dhunger = 10, dglucose = 10})
 world:addComponent("candy", {})
 world:addComponent("toPerform", {})
+world:addComponent("animation", {})
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
@@ -67,6 +76,7 @@ local player = world:addEntity({
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
     hasInput = {},
+    animation = {},
     player = {state = player_states.neutral},
     collideObject = {
       type = {"actor", "player"},
@@ -210,3 +220,123 @@ world:addEntity({renderable = {
     end
   end
 }})
+
+function witchPhase1Transition(entity, phase)
+   if phase then -- phase was supplied and we should handle the actual transition
+   else -- phase was not supplied so we only need to return if we're ready to transfer
+    return entity.phases.current
+   end
+end
+function witchPhase1(witch, dt)
+    printDebug("witch phase = "..witch.boss.state)
+    local timers = witch.timers
+    if witch.boss.state == boss_states.idle then
+        witch.position.pos = vector(love.graphics.getWidth()/2, love.graphics.getHeight()/2)
+        witch.velocity.vec = vector(0,0)
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.preparing
+            timers.maxTimes[witch_timers.stateTimer] = 4
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+        end
+        witch.witch.freq = 1
+        witch.witch.amp = 5
+    elseif witch.boss.state == boss_states.preparing then
+        --Slow floating
+            --slowing formula is:
+            -- amp = (-0.5 * arctan(x-3)) + (1 - 0.625) where x is thi timer value
+        local v = 2
+        local k = 1.8
+        local w = 2
+        witch.witch.amp = (k * math.atan(timers.timers[witch_timers.stateTimer] - v)) + w
+
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.telling
+            timers.maxTimes[witch_timers.stateTimer] = 1
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+        end
+    elseif witch.boss.state == boss_states.telling then
+        --Stop for a second
+        witch.witch.amp = 0
+
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.attacking
+            timers.maxTimes[witch_timers.stateTimer] = 5
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+        end
+    elseif witch.boss.state == boss_states.attacking then
+        --fly at the player
+
+        local witchPos = witch.position.pos
+        local playerPos = getPlayer(world).position.pos
+        if witch.witch.target == nil then
+            witch.witch.target = playerPos - witchPos
+            witch.witch.target = witch.witch.target:normalized()
+        end
+
+        local timeLeft = timers.timers[witch_timers.stateTimer]
+
+        local k= 15
+        local z = 8.4
+        local w = 30
+        local speed = ((-1 * math.log(timeLeft * k) + w) * z )
+
+        printDebug("speed = "..speed)
+
+        witch.velocity.vec = witch.witch.target:clone()
+        witch.velocity.currentSpeed = math.min(speed, witch.velocity.maxSpeed)
+
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.idle
+            timers.maxTimes[witch_timers.stateTimer] = 4
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+            witch.witch.target = nil
+        end
+    end
+    --
+            if witch.witch.target ~= nil then
+                local playerPos = getPlayer(world).position.pos
+                local witchPos = witch.position.pos
+                printNotice("target = ("..witch.witch.target.x..", "..witch.witch.target.y..")")
+                printNotice("playerPos = ("..playerPos.x..", "..playerPos.y..")")
+                printNotice("witchPos = ("..witchPos.x..", "..witchPos.y..")")
+            end
+end
+local spawnWitch = function()
+    world:addEntity({
+      position = {pos = vector(love.graphics.getWidth()/2,love.graphics.getHeight()/2)},
+      boundingBox = {},
+      phases = {transitions = {witchPhase1Transition}, functions = {witchPhase1}},
+      boss = {},
+      witch = {freq = 6, amp = 5, target = nil},
+      timers = {maxTimes = {1,2}, timers = {1,2}},
+      velocity = {maxSpeed = 1000},
+      collideObject = {
+        type = {"actor", "witch"},
+        shape = HC.rectangle(300, 300, 10, 10),
+        event = function(entity, collider, obj, dt)
+          print("the witch hit you!")
+        end
+      },
+      renderable = {
+        z = 0.5,
+        draw = function(entity)
+          --for witch in pairs(world:query("witch")) do
+              local timers = entity.timers
+              local floatTimer = timers.timers[witch_timers.floatTimer]
+              local newPos = (math.sin(entity.witch.freq * floatTimer * 2 * math.pi) * entity.witch.amp) + entity.position.pos.y
+
+              if floatTimer == 0 then
+                timers.timers[witch_timers.floatTimer] = timers.maxTimes[witch_timers.floatTimer]
+              end
+
+                DrawInstance (Witch, entity.position.pos.x, newPos)
+                Witch.curr_anim = Witch.sprite.animations_names[2]
+                Witch.size_scale = 3
+
+          --end
+        end
+      }
+    })
+end
+spawnWitch()
+>>>>>>> 0efcf30d571f0dc8c913b26ddeba9f84a51eb8d5

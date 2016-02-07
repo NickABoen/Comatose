@@ -1,8 +1,9 @@
 --------------------------------------------------
 --                    Comatose                  --
 --------------------------------------------------
-debug = true
+local debug = true 
 
+timer = require('hump/timer')
 Gamestate = require('hump/gamestate')
 Camera = require('hump/camera')
 vector = require('hump/vector')
@@ -74,6 +75,14 @@ function menu:keyreleased(key, code)
         Gamestate.switch(leadin)
     end
 end
+
+-- useful "enums"
+player_states = {neutral = "neutral", rolling = "rolling"}
+key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
+boss_states = {preparing = 'preparing', telling = 'telling', attacking = 'attacking', 
+                idle = 'idle', transPhase = 'transPhase'}
+timer_states = {stop = 'stop', restart = 'restart'}
+witch_timers = {floatTimer = 1, stateTimer = 2}
 
 level_1_1 = {}
 function level_1_1:update(dt)

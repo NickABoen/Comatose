@@ -2,6 +2,7 @@
 local world = ...
 
 Player = GetInstance ("animations/PlayerSprite.lua")
+Witch = GetInstance ("animations/WitchSprite.lua")
 
 local function addInteractable(collider, obj)
   collider.collideWorld.objects[obj.collideObject.shape] = obj
@@ -93,7 +94,8 @@ world:addSystem("input",{
                 love.event.quit()
             end
 
-            if player.state == player_states.neutral then
+            --if player.state == player_states.neutral then
+              if Player.curr_anim == Player.sprite.animations_names[1] then
 
                 if (keys['up'].key.state == key_states.pressed) or (keys['up'].key.state == key_states.down) then
                     velocity.vec.y = -1
@@ -112,12 +114,10 @@ world:addSystem("input",{
                 end
 
                 if (keys['d'].key.state == key_states.pressed) or (keys['d'].key.state == key_states.down) then
-                  Player.curr_anim = Player.sprite.animations_names[2]
-                  Player.curr_frame = 1
-                else
-                  Player.curr_anim = Player.sprite.animations_names[1]
-                  Player.curr_frame = 1
-                end
+                    Player.curr_anim = Player.sprite.animations_names[2]
+                    player.state = player_states.rolling
+                  end
+
 
                 velocity.vec = velocity.vec:normalized()
 
@@ -189,6 +189,50 @@ world:addSystem("render", {
     end
 })
 
+--add a "timer" system with an update callback
+-- this system updates all registered timers each tick
+world:addSystem("timer",{
+    update = function(self, dt)
+        for entity in pairs(world:query("timers")) do
+            for i in ipairs(entity.timers.maxTimes) do
+                local maxTime = entity.timers.maxTimes[i]
+                local timers = entity.timers 
+                timers.timers[i] = timers.timers[i] - dt
+
+                if timers.timers[i] < 0 then
+                    timers.timers[i] = 0
+                end
+            end
+        end
+    end
+})
+
+--add a "ai" system with an update callback
+-- this system handles the calls to an enemy logic update
+world:addSystem("ai", {
+    update = function(self, dt)
+        for entity in pairs(world:query("phases boss")) do
+            local bossState = entity.boss
+            local phases = entity.phases
+
+            printDebug("ai system boss state = "..bossState.state)
+
+            if bossState.state == boss_states.transPhase then
+                phases.transitions[phases.current](entity)
+            else
+               local newPhase = phases.transitions[phases.current](entity)
+
+                if newPhase == phases.current then -- No need to change Phases
+                    phases.functions[phases.current](entity, dt)
+                else -- Phases didn't match so it's time to shift
+                    phases.current = newPhase
+                    bossState.state = boss_states.transPhase
+                end
+            end
+        end
+    end
+})
+
 local glucoseHarshness = 0.003
 local hungerHarshness = 0.003
 local glucoseHealth = 2
@@ -245,6 +289,25 @@ world:addSystem("preformList", {
         player.glucose.value = math.max(player.glucose.value, player.glucose.min)
         player.insulin.value = math.min(player.insulin.value, player.insulin.max)
         player.insulin.value = math.max(player.insulin.value, player.insulin.min)
+      end
+    end
+  end
+})
+
+world:addSystem("playerAnimation", {
+  update = function(entity, dt)
+    actions = world:query("animation player")
+    player = getPlayer()
+
+    if Player.curr_anim == Player.sprite.animations_names[2] then
+      if Player.curr_frame < 6 then
+        player.velocity.currentSpeed = player.velocity.currentSpeed + 10
+        UpdateInstance(Player, dt)
+      else
+        Player.curr_frame = 1
+        Player.curr_anim = Player.sprite.animations_names[1]
+        player.state = player_states.neutral
+        player.velocity.currentSpeed = player.velocity.maxSpeed
       end
     end
   end
