@@ -150,20 +150,31 @@ world:addSystem("render", {
     end
 })
 
+local glucoseHarshness = 0.003
+local hungerHarshness = 0.003
+local glucoseHealth = 2
+local hungerHealth = 2
+local perfect = 100
+
 world:addSystem("updateHealth", {
-  update = function()
+  update = function(entity, dt)
     for entity in pairs(world:query("health glucose hunger")) do
-      local glucoseTerm = -0.001(entity.glucose.value - 100)^2 + 1
-      local hungerTerm = -0.001(entity.hunger.value - 100)^2 + 1
-      entity.health.value = entity.hunger.value + glucoseTerm + hungerTerm
+      local glucoseTerm = -glucoseHarshness*(entity.glucose.value - perfect)^2 + glucoseHealth
+      local hungerTerm = -hungerHarshness*(entity.hunger.value - perfect)^2 + hungerHealth
+      entity.health.value = entity.hunger.value + dt * glucoseTerm + dt * hungerTerm
+      entity.health.value = math.min(entity.health.value, entity.health.max)
+      entity.health.value = math.max(entity.health.value, entity.health.min)
     end
   end
 })
 
 world:addSystem("updateHunger", {
-  update = function()
+  update = function(entity, dt)
     for entity in pairs(world:query("glucose hunger")) do
-      local glucoseTerm = -0.001(entity.glucose.value - 100)^2
+      local glucoseTerm = -0.001*(entity.glucose.value - 100)^2
+      entity.hunger.value = entity.hunger.value + dt * glucoseTerm
+      entity.hunger.value = math.min(entity.hunger.value, entity.hunger.max)
+      entity.hunger.value = math.max(entity.hunger.value, entity.hunger.min)
     end
   end
 })
@@ -171,18 +182,19 @@ world:addSystem("updateHunger", {
 local hinderGlucose = 200
 
 world:addSystem("performHinders", {
-  update = function()
+  update = function(entity, dt)
     --add this later perhaps
   end
 })
 
-local function getPlayer()
-  local player, v = pairs(world:query("player"))()
-  return player
+function getPlayer()
+  for player in pairs(world:query("player")) do
+    return player
+  end
 end
 
 world:addSystem("preformList", {
-  update = function()
+  update = function(entity, dt)
     actions = world:query("toPerform action")
     for toPerform in pairs(actions) do
       world:detach(toPerform, "toPerform")
@@ -190,6 +202,11 @@ world:addSystem("preformList", {
       if toPerform.action.cost < player.glucose.value then
         toPerform.action.action()
         player.glucose.value = player.glucose.value - toPerform.action.cost
+        player.insulin.value = 0.05 * player.glucose.value - toPerform.action.cost
+        player.glucose.value = math.min(player.glucose.value, player.glucose.max)
+        player.glucose.value = math.max(player.glucose.value, player.glucose.min)
+        player.insulin.value = math.min(player.insulin.value, player.insulin.max)
+        player.insulin.value = math.max(player.insulin.value, player.insulin.min)
       end
     end
   end

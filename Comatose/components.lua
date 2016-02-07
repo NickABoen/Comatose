@@ -9,10 +9,10 @@ world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
 world:addComponent("collideWorld", {type = {}, world = HC.new(), objects = {}})
-world:addComponent("health", {value = 0})
-world:addComponent("hunger", {value = 150})
-world:addComponent("glucose", {value = 150})
-world:addComponent("insulin", {value = 150})
+world:addComponent("health", {value = 0, min = 0, max = 1500})
+world:addComponent("hunger", {value = 100, min = 0, max = 400})
+world:addComponent("glucose", {value = 100, min = 0, max = 400})
+world:addComponent("insulin", {value = 10, min = 0, max = 20})
 world:addComponent("action", {cost = 1, action = function() end})
 world:addComponent("toPerform", {cost = 1, action = function() end})
 
@@ -42,6 +42,10 @@ local escapeKey = world:addEntity({
 
 -- create a player entity at position (100, 100)
 local player = world:addEntity({
+    glucose = {value = 90},
+    hunger = {value = 90},
+    insulin = {value = 10},
+    health = {value = 1500},
     position = {pos = vector(200,200)},
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
