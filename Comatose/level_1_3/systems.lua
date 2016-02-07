@@ -212,7 +212,7 @@ world:addSystem("timer",{
         for entity in pairs(world:query("timers")) do
             for i in ipairs(entity.timers.maxTimes) do
                 local maxTime = entity.timers.maxTimes[i]
-                local timers = entity.timers 
+                local timers = entity.timers
                 timers.timers[i] = timers.timers[i] - dt
 
                 if timers.timers[i] < 0 then
@@ -221,6 +221,17 @@ world:addSystem("timer",{
             end
         end
     end
+})
+
+world:addSystem("deathThingy", {
+   update = function(self, dt)
+     for player in pairs(world:query("player")) do
+        if player.hunger.value <= 0 then
+          Gamestate.switch(deathState)
+          return
+        end
+     end
+   end
 })
 
 --add a "ai" system with an update callback
