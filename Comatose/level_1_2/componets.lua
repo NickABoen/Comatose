@@ -231,7 +231,7 @@ function witchPhase1Transition(entity, phase)
 end
 
 function witchPhase1(witch, dt)
-    printDebug("witch phase = "..witch.boss.state)
+    --printDebug("witch phase = "..witch.boss.state)
     local timers = witch.timers
     if witch.boss.state == boss_states.idle then
         witch.position.pos = vector(300,220)

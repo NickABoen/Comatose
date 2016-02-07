@@ -108,33 +108,50 @@ world:addSystem("input",{
 
             --if player.state == player_states.neutral then
               if Player.curr_anim == Player.sprite.animations_names[1] then
+                local isFootstep = false
 
                 if (keys['up'].key.state == key_states.pressed) or (keys['up'].key.state == key_states.down) then
                     velocity.vec.y = -1
+                    isFootstep = true
                 elseif (keys['down'].key.state == key_states.pressed) or (keys['down'].key.state == key_states.down) then
                     velocity.vec.y = 1
+                    isFootstep = true
                 else
                     velocity.vec.y = 0
                 end
 
                 if (keys['left'].key.state == key_states.pressed) or (keys['left'].key.state == key_states.down) then
                     velocity.vec.x = -1
+                    isFootstep = true
                 elseif (keys['right'].key.state == key_states.pressed) or (keys['right'].key.state == key_states.down) then
                     velocity.vec.x = 1
+                    isFootstep = true
                 else
                     velocity.vec.x = 0
+                end
+
+                if isFootstep and stepsCooldown <= 0 then
+                    stepsCooldown = 0.5
+                    local stepNum = love.math.random(1,3)
+                    if stepNum == 1 then
+                        sounds['fs1']:play()
+                    else if stepNum == 2 then
+                        sounds['fs2']:play()
+                    else
+                        sounds['fs3']:play()
+                    end
                 end
 
                 if (keys['d'].key.state == key_states.pressed) or (keys['d'].key.state == key_states.down) then
                     Player.curr_anim = Player.sprite.animations_names[2]
                     player.state = player_states.rolling
-                end
-
+                    sounds['roll']:play()
+                  end
 
                 velocity.vec = velocity.vec:normalized()
 
-                if keys['space'].key.state == key_states.pressed then
-                    player.state = player_states.rolling
+                --if keys['space'].key.state == key_states.pressed then
+                    --player.state = player_states.rolling
                 end
 
             elseif player.state == player_states.rolling then
@@ -143,7 +160,6 @@ world:addSystem("input",{
         end
     end
 })
-
 
 world:addSystem("stateChange", {
 
