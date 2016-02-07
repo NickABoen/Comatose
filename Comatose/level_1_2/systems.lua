@@ -258,6 +258,30 @@ world:addSystem("preformList", {
   end
 })
 
+world:addSystem("ai", {
+    update = function(self, dt)
+        for entity in pairs(world:query("phases boss")) do
+            local bossState = entity.boss
+            local phases = entity.phases
+
+            printDebug("ai system boss state = "..bossState.state)
+
+            if bossState.state == boss_states.transPhase then
+                phases.transitions[phases.current](entity)
+            else
+               local newPhase = phases.transitions[phases.current](entity)
+
+                if newPhase == phases.current then -- No need to change Phases
+                    phases.functions[phases.current](entity, dt)
+                else -- Phases didn't match so it's time to shift
+                    phases.current = newPhase
+                    bossState.state = boss_states.transPhase
+                end
+            end
+        end
+    end
+})
+
 world:addSystem("playerAnimation", {
   update = function(entity, dt)
     actions = world:query("animation player")

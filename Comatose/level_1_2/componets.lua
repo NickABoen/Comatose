@@ -16,7 +16,7 @@ world:addComponent("velocity", { maxSpeed = 100, currentSpeed = 100, vec = vecto
 world:addComponent("boundingBox", {width = 10, height = 10})
 world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
-world:addComponent("witch", {state = player_states.neutral})
+world:addComponent("witch",{hitPlayer = false, hitWall = false, freq = 1, amp = 1, speed = 100, target = nil})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
@@ -30,6 +30,13 @@ world:addComponent("food", {dhunger = 10, dglucose = 10})
 world:addComponent("candy", {})
 world:addComponent("toPerform", {})
 world:addComponent("animation", {})
+
+
+world:addComponent("damage", {amount = 0})
+world:addComponent("timers", {maxTimes = {}, timers = {}})
+world:addComponent("phases",{current = 1, transitions = {}, functions  = {}})
+world:addComponent("boss", {state = boss_states.idle})
+
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
