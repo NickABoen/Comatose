@@ -7,6 +7,7 @@ vector = require('hump/vector')
 require('TiledLoader')
 Secs = require('secs')
 world = Secs.new()
+HC = require 'HC'
 require 'trace'
 
 local fps
@@ -28,13 +29,13 @@ function printFPS()
     end
 end
 
-
 -- useful "enums"
 player_states = {neutral = "neutral", rolling = "rolling"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
 
-require 'components'
 require 'systems'
+require 'components'
+
 
 function love.load()
   printNotice('Trace system online.', trace.styles.green)
