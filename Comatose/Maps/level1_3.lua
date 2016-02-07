@@ -30,7 +30,61 @@ return {
       tilecount = 13166,
       tiles = {
         {
+          id = 11156,
+          objectGroup = {
+            type = "objectgroup",
+            name = "",
+            visible = true,
+            opacity = 1,
+            offsetx = 0,
+            offsety = 0,
+            properties = {},
+            objects = {
+              {
+                id = 0,
+                name = "",
+                type = "",
+                shape = "rectangle",
+                x = 0,
+                y = 0,
+                width = 16,
+                height = 16,
+                rotation = 0,
+                visible = true,
+                properties = {}
+              }
+            }
+          }
+        },
+        {
           id = 11381,
+          objectGroup = {
+            type = "objectgroup",
+            name = "",
+            visible = true,
+            opacity = 1,
+            offsetx = 0,
+            offsety = 0,
+            properties = {},
+            objects = {
+              {
+                id = 0,
+                name = "",
+                type = "",
+                shape = "rectangle",
+                x = 0,
+                y = 0,
+                width = 16,
+                height = 16,
+                rotation = 0,
+                visible = true,
+                properties = {}
+              }
+            }
+          }
+        },
+        {
+          id = 11382,
           objectGroup = {
             type = "objectgroup",
             name = "",
@@ -103,6 +157,33 @@ return {
                 y = 0,
                 width = 16,
                 height = 16,
+                rotation = 0,
+                visible = true,
+                properties = {}
+              }
+            }
+          }
+        },
+        {
+          id = 11609,
+          objectGroup = {
+            type = "objectgroup",
+            name = "",
+            visible = true,
+            opacity = 1,
+            offsetx = 0,
+            offsety = 0,
+            properties = {},
+            objects = {
+              {
+                id = 0,
+                name = "",
+                type = "",
+                shape = "rectangle",
+                x = 0,
+                y = -4,
+                width = 16,
+                height = 20,
                 rotation = 0,
                 visible = true,
                 properties = {}
