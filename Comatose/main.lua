@@ -24,6 +24,8 @@ end
 local leadinWorld = require('leadin/leadin')
 local menuWorld = require('menu/menu')
 local testWorld = require('PushTest/pushtest')
+local level_1_1World = require('level_1_1/level_1_1')
+local level_1_2World = require('level_1_2/level_1_2')
 
 --make the game states (ensure these are global)
 --here is the code for the leadin
@@ -77,9 +79,38 @@ function menu:keyreleased(key, code)
     end
 end
 
-function rubber_band(dx,dy,...)
-    local dt = love.timer.getDelta()
-    return Camera.smooth.linear(1000)(dx*dt, dy*dt, ...)
+level_1_1 = {}
+function level_1_1:update(dt)
+  level_1_1World:update(dt)
+end
+function level_1_1:draw()
+  cam:attach()
+  level_1_1World:draw()
+  cam:detach()
+  trace.draw()
+  printFPS()
+  local player = getPlayer(level_1_1World)
+  love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
+  love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
+  love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
+  love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
+end
+
+level_1_2 = {}
+function level_1_2:update(dt)
+  level_1_2World:update(dt)
+end
+function level_1_2:draw()
+  cam:attach()
+  level_1_2World:draw()
+  cam:detach()
+  trace.draw()
+  printFPS()
+  local player = getPlayer(level_1_2World)
+  love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
+  love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
+  love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
+  love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
 end
 
 function love.load()
@@ -89,9 +120,9 @@ function love.load()
   printNotice('Trace system online.', trace.styles.green)
   local width, height = love.graphics.getDimensions()
   cam = Camera(100, 100)
-  cam:zoom(2)
+  cam:zoom(2.5)
   cam.smoother = Camera.smooth.linear(1000)
   --init the game states
   Gamestate.registerEvents()
-  Gamestate.switch(pushtest)
+  Gamestate.switch(level_1_2)
 end

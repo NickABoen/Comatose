@@ -64,7 +64,7 @@ local player = world:addEntity({
     hunger = {value = 90},
     insulin = {value = 10},
     health = {value = 1500},
-    position = {pos = vector(545,240)},
+    position = {pos = vector(600,400)},
     velocity = {maxSpeed = 100, currentSpeed = 100},
     boundingBox = {},
     animation = {},
@@ -82,6 +82,7 @@ local player = world:addEntity({
           local position = entity.position
           local vec = entity.velocity.vec
           local speed = entity.velocity.currentSpeed
+          --cam:lockPosition(position.pos.x, position.pos.y, Camera.smooth.linear(10000))
           position.pos = position.pos - (vec * speed * dt)
         end
       end
@@ -95,7 +96,7 @@ local player = world:addEntity({
     }
 })
 
-local layers, tiles, boxes = Loader.load('Maps', 'leadin')
+local layers, tiles, boxes = Loader.load('Maps', 'level1_1')
 --add the map
 world:addEntity({renderable = {
   draw = function(entity)
@@ -105,10 +106,11 @@ world:addEntity({renderable = {
   end
 }})
 
+--[[
 local candyIdTable = {8432, 8433, 8434, 8435, 8436}
 local candies = {}
 for i = 0, 30 do
-  local tile = tiles[candyIdTable[i % 5 + 1]]
+  local tile = tiles[ candyIdTable[i % 5 + 1] ]
   candies[#candies + 1] = world:addEntity({
     food = {
       dhunger = 1,
@@ -127,6 +129,7 @@ for i = 0, 30 do
     }
   })
 end
+--]]
 
 local mapBox = world:addEntity({collideWorld = {
   type = {player=true}
@@ -137,9 +140,11 @@ end
 local candyLand = world:addEntity({collideWorld = {
   type = {player=true}
 }})
-for k, candy in pairs(candies) do
-  addInteractable(candyLand, candy)
-end
+--for k, candy in pairs(candies) do
+  --addInteractable(candyLand, candy)
+--end
+
+--addInteractable(mapBox, witch)
 
 if debug then
   world:addEntity({renderable = {
