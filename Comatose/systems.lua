@@ -149,3 +149,27 @@ world:addSystem("render", {
         end
     end
 })
+
+--add a "ai" system with an update callback
+-- this system handles the calls to an enemy logic update
+world:addSystem("ai", {
+    update = function(self)
+        for entity in pairs(world:query("phases boss")) do
+            local bossState = entity.boss
+            local phases = entity.phases
+
+            if bossState.state == boss_states.transPhase then
+                phases.transitions[phases.current](entity)
+            else
+                local newPhase = phases.transitions[phases.current](entity)
+
+                if newPhase == phases.current then -- No need to change Phases
+                    phases.functions[phases.current](entity)
+                else -- Phases didn't match so it's time to shift
+                    phases.current = newPhase
+                    bossState.state = bosses_state.transPhase
+                end
+            end
+        end
+    end
+})

@@ -3,6 +3,7 @@
 --------------------------------------------------
 local debug = true
 
+timer = require('hump/timer')
 vector = require('hump/vector')
 require('TiledLoader')
 Secs = require('secs')
@@ -32,6 +33,8 @@ end
 -- useful "enums"
 player_states = {neutral = "neutral", rolling = "rolling"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
+boss_states = {attacking = 'attacking', idle = 'idle', transPhase = 'transPhase'}
+timer_states = {stop = 'stop', restart = 'restart'}
 
 require 'systems'
 require 'components'

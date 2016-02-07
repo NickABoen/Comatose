@@ -7,7 +7,14 @@ world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
 world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
-world:addComponent("phases",{currentPhase = 1, phaseFuncs = {}})
+world:addComponent("damage", {amount = 0})
+world:addComponent("timer", {max = 1, timeLeft = 1, state = timer_states.stop, trigger = function() end})
+-- phase transitions are functions. Without parameter (besides entity) they should return if phase 
+-- change criteria has been met, otherwise if a new phase is passed they supply the 
+-- transition function to make the change phase functions deal with behavior that occurs 
+-- from substates and reactions to players
+world:addComponent("phases",{current = 1, transitions = {}, functions  = {}})
+world:addComponent("boss", {state = boss_states.idle})
 world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
 world:addComponent("collideWorld", {type = {}, world = HC.new(), objects = {}})
 
@@ -85,8 +92,9 @@ world:addEntity({renderable = {
 }})
 
 local witch = world:addEntity({
-  position = {pos = vector(300,300)},
+  position = {pos = vector(love.graphics.getWidth()/2,love.graphics.getHeight()/2)},
   boundingBox = {},
+  phases = {},
   velocity = {},
   collideObject = {
     type = {"actor", "witch"},
@@ -108,6 +116,15 @@ local witch = world:addEntity({
     end
   }
 })
+
+function witchPhase1Transition(entity, phase)
+   if phase then -- phase was supplied and we should handle the actual transition
+   else -- phase was not supplied so we only need to return if we're ready to transfer
+   end
+end
+function witchPhase1()
+    
+end
 
 local mapBox = world:addEntity({collideWorld = {
   type = {player=true}
