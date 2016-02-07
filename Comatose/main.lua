@@ -1,7 +1,7 @@
 --------------------------------------------------
 --                    Comatose                  --
 --------------------------------------------------
-local debug = true 
+local debug = true
 
 timer = require('hump/timer')
 Gamestate = require('hump/gamestate')
@@ -79,7 +79,7 @@ end
 -- useful "enums"
 player_states = {neutral = "neutral", rolling = "rolling"}
 key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
-boss_states = {preparing = 'preparing', telling = 'telling', attacking = 'attacking', 
+boss_states = {preparing = 'preparing', telling = 'telling', attacking = 'attacking',
                 idle = 'idle', transPhase = 'transPhase'}
 timer_states = {stop = 'stop', restart = 'restart'}
 witch_timers = {floatTimer = 1, stateTimer = 2}
@@ -121,6 +121,22 @@ function level_1_3:draw()
   local player = getPlayer(level_1_3World)
 end
 
+finState = {}
+function finState:draw()
+  love.graphics.setColor(0, 0, 0)
+  love.graphics.rectangle('fill', 0, 0, 2000, 2000)
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.print("The witch could not escape due to the chairs!\n you win!", 400, 400)
+end
+
+deathState = {}
+function deathState:draw()
+  love.graphics.setColor(0, 0, 0)
+  love.graphics.rectangle('fill', 0, 0, 2000, 2000)
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.print("You let your health drop too low!\n you are dead and must start over!", 400, 400)
+end
+
 function love.load()
   --Witch = GetInstance ("WitchSprite.lua")
   --Player = GetInstance ("PlayerSprite.lua")
@@ -132,5 +148,5 @@ function love.load()
   cam.smoother = Camera.smooth.linear(1000)
   --init the game states
   Gamestate.registerEvents()
-  Gamestate.switch(level_1_1)
+  Gamestate.switch(level_1_3)
 end

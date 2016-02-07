@@ -163,7 +163,7 @@ for i = 1, 10 do
 end
 
 local mapBox = world:addEntity({collideWorld = {
-  type = {player=true}
+  type = {player=true, witch=true}
 }})
 for k, box in pairs(boxes) do
   addShape(mapBox, box)
@@ -174,6 +174,11 @@ local furnWorld = world:addEntity({collideWorld = {
 for k, furn in pairs(furniture) do
   addInteractable(furnWorld, furn)
 end
+
+local playerWorld = world:addEntity({collideWorld = {
+  type = {bullet=true},
+}})
+addInteractable(playerWorld, player)
 
 --addInteractable(mapBox, witch)
 
@@ -220,18 +225,86 @@ world:addEntity({renderable = {
     end
   end
 }})
-
+function witchPhase2Transition(entity, phase)
+   if phase then -- phase was supplied and we should handle the actual transition
+   else -- phase was not supplied so we only need to return if we're ready to transfer
+    return entity.phases.current
+   end
+end
 function witchPhase1Transition(entity, phase)
    if phase then -- phase was supplied and we should handle the actual transition
    else -- phase was not supplied so we only need to return if we're ready to transfer
     return entity.phases.current
    end
 end
+local phase2time = 0
+function witchPhase2(witch, dt)
+    phase2time = phase2time + dt
+    local theta = 2 * math.pi * phase2time / 3
+    local raduis = 7 * 16
+    witch.position.pos.x = raduis * math.cos(theta) + player.position.pos.x
+    witch.position.pos.y = raduis * math.sin(theta) + player.position.pos.y
+    witch.velocity.vec = vector(0, 0)
+    if math.random() > 0.99 then
+      spawnBM(player.position.pos - witch.position.pos,   witch.position.pos:clone())
+    end
+    if phase2time > 10 then
+       phase2time = 0
+       witch.phases.current = 1
+    end
+end
+local phase3time = 0
+local phase3pos
+function witchPhase3(witch, dt)
+    phase3time = phase3time + dt
+    local theta = 2 * math.pi * phase3time * 50
+    local raduis = 2
+    witch.position.pos.x = raduis * math.cos(theta) + phase3pos.x
+    witch.position.pos.y = raduis * math.sin(theta) + phase3pos.y
+    witch.velocity.vec = vector(0, 0)
+    if phase3time > 3 then
+       phase3time = 0
+       witch.phases.current = 2
+    end
+end
+local phase4time = 0
+function witchPhase4(witch, dt)
+    phase4time = phase4time + dt
+    witch.velocity.vec = vector(0, 1)
+    if phase4time > 0.5 then
+       phase4time = 0
+       witch.phases.current = 1
+    end
+end
+function spawnBM(vec, pos)
+  local thing = world:addEntity({
+    position = {pos = pos},
+    velocity = {currentSpeed = 1, vec = vec},
+    collideObject = {
+      type = {"bullet"},
+      shape = HC.rectangle(pos.x, pos.y, 3, 3),
+      event = function(entity, collider, obj, dt)
+        if obj and obj.player then
+          obj.glucose.value = obj.glucose.value + 7
+          obj.hunger.value = obj.hunger.value + 4
+        end
+      end
+    },
+    renderable = {
+      z = 0.2,
+      draw = function(entity)
+        local x, y = entity.position.pos:unpack()
+        love.graphics.rectangle('fill', math.floor(x), math.floor(y), 5, 5)
+      end
+    }
+  })
+  --addInteractable(playerWorld, thing)
+end
 function witchPhase1(witch, dt)
     printDebug("witch phase = "..witch.boss.state)
     local timers = witch.timers
     if witch.boss.state == boss_states.idle then
-        witch.position.pos = vector(love.graphics.getWidth()/2, love.graphics.getHeight()/2)
+        --witch.position.pos = vector(love.graphics.getWidth()/2, love.graphics.getHeight()/2)
         witch.velocity.vec = vector(0,0)
         if timers.timers[witch_timers.stateTimer] == 0 then
             witch.boss.state = boss_states.preparing
@@ -275,7 +348,7 @@ function witchPhase1(witch, dt)
 
         local timeLeft = timers.timers[witch_timers.stateTimer]
 
-        local k= 15
+        local k= 10
         local z = 8.4
         local w = 30
         local speed = ((-1 * math.log(timeLeft * k) + w) * z )
@@ -305,16 +378,32 @@ local spawnWitch = function()
     world:addEntity({
       position = {pos = vector(love.graphics.getWidth()/2,love.graphics.getHeight()/2)},
       boundingBox = {},
-      phases = {transitions = {witchPhase1Transition}, functions = {witchPhase1}},
+      phases = {transitions = {witchPhase1Transition, witchPhase2Transition, witchPhase1Transition, witchPhase1Transition}, functions = {witchPhase1, witchPhase2, witchPhase3, witchPhase4}},
       boss = {},
       witch = {freq = 6, amp = 5, target = nil},
       timers = {maxTimes = {1,2}, timers = {1,2}},
       velocity = {maxSpeed = 1000},
       collideObject = {
-        type = {"actor", "witch"},
+        type = {"witch"},
         shape = HC.rectangle(300, 300, 10, 10),
         event = function(entity, collider, obj, dt)
-          print("the witch hit you!")
+          if obj and #obj.collideObject.type >= 2 and obj.collideObject.type[2] == "chairs" and entity.phases.current == 4 then
+            Gamestate.switch(finState)
+            return
+          end
+          if obj and obj.player then
+            player.hunger.value = player.hunger.value - 10
+          end
+          if not obj and entity.phases.current == 1 then
+            if entity.position.pos.y < 40 then
+              print("this wiiitch is on fiiiiiiiree")
+              entity.phases.current = 4
+              return
+            end
+            entity.velocity.vec = vector(0, 0)
+            entity.phases.current = 3
+            phase3pos = entity.position.pos
+          end
         end
       },
       renderable = {
@@ -339,4 +428,3 @@ local spawnWitch = function()
     })
 end
 spawnWitch()
->>>>>>> 0efcf30d571f0dc8c913b26ddeba9f84a51eb8d5
