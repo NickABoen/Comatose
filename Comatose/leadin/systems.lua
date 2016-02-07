@@ -1,7 +1,7 @@
 
 local world = ...
 
-Player = GetInstance ("PlayerSprite.lua")
+Player = GetInstance ("animations/PlayerSprite.lua")
 
 local function addInteractable(collider, obj)
   collider.collideWorld.objects[obj.collideObject.shape] = obj
@@ -245,5 +245,14 @@ world:addSystem("preformList", {
         player.insulin.value = math.max(player.insulin.value, player.insulin.min)
       end
     end
+  end
+})
+
+world:addSystem("playerAnimation", {
+  update = function(entity, dt)
+    actions = world:query("animation player")
+      if Player.sprite.curr_anim == Player.sprite.animations_names.rolling then
+        UpdateInstance(Player, dt)
+      end
   end
 })

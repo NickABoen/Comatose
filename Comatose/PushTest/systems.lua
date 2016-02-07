@@ -1,7 +1,7 @@
 
 local world = ...
 
-Player = GetInstance ("PlayerSprite.lua")
+Player = GetInstance ("animations/PlayerSprite.lua")
 
 local function addInteractable(collider, obj)
   collider.collideWorld.objects[obj.collideObject.shape] = obj

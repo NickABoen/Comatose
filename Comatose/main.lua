@@ -12,7 +12,7 @@ Secs = require('secs')
 HC = require 'HC'
 require 'trace'
 require 'util'
-require "AnimatedSprite"
+require "animations/AnimatedSprite"
 
 function getPlayer(world)
   for player in pairs(world:query("player")) do
@@ -83,6 +83,9 @@ function rubber_band(dx,dy,...)
 end
 
 function love.load()
+  --Witch = GetInstance ("WitchSprite.lua")
+  --Player = GetInstance ("PlayerSprite.lua")
+
   printNotice('Trace system online.', trace.styles.green)
   local width, height = love.graphics.getDimensions()
   cam = Camera(100, 100)
