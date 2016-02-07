@@ -149,3 +149,48 @@ world:addSystem("render", {
         end
     end
 })
+
+world:addSystem("updateHealth", {
+  update = function()
+    for entity in pairs(world:query("health glucose hunger")) do
+      local glucoseTerm = -0.001(entity.glucose.value - 100)^2 + 1
+      local hungerTerm = -0.001(entity.hunger.value - 100)^2 + 1
+      entity.health.value = entity.hunger.value + glucoseTerm + hungerTerm
+    end
+  end
+})
+
+world:addSystem("updateHunger", {
+  update = function()
+    for entity in pairs(world:query("glucose hunger")) do
+      local glucoseTerm = -0.001(entity.glucose.value - 100)^2
+    end
+  end
+})
+
+local hinderGlucose = 200
+
+world:addSystem("performHinders", {
+  update = function()
+    --add this later perhaps
+  end
+})
+
+local function getPlayer()
+  local player, v = pairs(world:query("player"))()
+  return player
+end
+
+world:addSystem("preformList", {
+  update = function()
+    actions = world:query("toPerform action")
+    for toPerform in pairs(actions) do
+      world:detach(toPerform, "toPerform")
+      local player = getPlayer()
+      if toPerform.action.cost < player.glucose.value then
+        toPerform.action.action()
+        player.glucose.value = player.glucose.value - toPerform.action.cost
+      end
+    end
+  end
+})

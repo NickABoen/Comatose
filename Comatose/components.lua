@@ -9,6 +9,12 @@ world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
 world:addComponent("collideWorld", {type = {}, world = HC.new(), objects = {}})
+world:addComponent("health", {value = 0})
+world:addComponent("hunger", {value = 150})
+world:addComponent("glucose", {value = 150})
+world:addComponent("insulin", {value = 150})
+world:addComponent("action", {cost = 1, action = function() end})
+world:addComponent("toPerform", {cost = 1, action = function() end})
 
 --For this component 'was' and 'is' should only ever be up or down while
 --state represents a 4 state button with up, pressed, down, and released
