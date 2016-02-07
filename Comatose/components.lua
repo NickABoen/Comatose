@@ -10,7 +10,7 @@ world:addComponent("debug",{ name = ''})
 world:addComponent("renderable",{z = 0, draw = function() end})
 world:addComponent("damage", {amount = 0})
 world:addComponent("timers", {maxTimes = {}, timers = {}})
-world:addComponent("witch",{hitPlayer = false, hitWall = false, freq = 1, amp = 1, speed = 100, target = vector(0,0)})
+world:addComponent("witch",{hitPlayer = false, hitWall = false, freq = 1, amp = 1, speed = 100, target = nil})
 -- phase transitions are functions. Without parameter (besides entity) they should return if phase 
 -- change criteria has been met, otherwise if a new phase is passed they supply the 
 -- transition function to make the change phase functions deal with behavior that occurs 
@@ -125,6 +125,8 @@ function witchPhase1(witch, dt)
     printDebug("witch phase = "..witch.boss.state)
     local timers = witch.timers
     if witch.boss.state == boss_states.idle then
+        witch.position.pos = vector(love.graphics.getWidth()/2, love.graphics.getHeight()/2)
+        witch.velocity.vec = vector(0,0)
         if timers.timers[witch_timers.stateTimer] == 0 then
             witch.boss.state = boss_states.preparing
             timers.maxTimes[witch_timers.stateTimer] = 4
@@ -152,35 +154,43 @@ function witchPhase1(witch, dt)
 
         if timers.timers[witch_timers.stateTimer] == 0 then
             witch.boss.state = boss_states.attacking
-            timers.maxTimes[witch_timers.stateTimer] = 10 
+            timers.maxTimes[witch_timers.stateTimer] = 5
             timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
-            witch.witch.target = witch.position.pos
         end
-    elseif witch.boss.state == boss_states.telling then
+    elseif witch.boss.state == boss_states.attacking then
         --fly at the player
-        local playerPos = getPlayer().position.pos
 
         local witchPos = witch.position.pos
+        if witch.witch.target == nil then
+            local playerPos = getPlayer().position.pos
 
-        local diff = vector(0,0)
-        if witch.witch.target == witch.position.pos then
-            witch.witch.target = playerPos
-            diff = withPos - witch.witch.target
+            witch.witch.target = playerPos - witchPos
+            witch.witch.target = witch.witch.target:normalized()
         end
 
-        diff = diff:normalized()
-        
-        local k = 9
-        local z = 0.2
-        local w = 10
-        local speed = ((-1 * math.log(timers.timers[witch_timers.stateTimer]) * k) + w ) * z * dt
+        local timeLeft = timers.timers[witch_timers.stateTimer]
 
-        witch.velocity.vec = diff
-        witch.velocity.currentSpeed = speed
-        local diff = witchPos - playerPos
+        local k= 15
+        local z = 8.4
+        local w = 30
+        local speed = ((-1 * math.log(timeLeft * k) + w) * z )
+
+        printDebug("speed = "..speed)
+
+        witch.velocity.vec = witch.witch.target
+        witch.velocity.currentSpeed = math.min(speed, witch.velocity.maxSpeed)
+
+        if timers.timers[witch_timers.stateTimer] == 0 then
+            witch.boss.state = boss_states.idle
+            timers.maxTimes[witch_timers.stateTimer] = 4
+            timers.timers[witch_timers.stateTimer] = timers.maxTimes[witch_timers.stateTimer]
+            witch.witch.target = nil
+        end
     end
     --
-        
+            if witch.witch.target ~= nil then
+                printDebug("target = ("..witch.witch.target.x..", "..witch.witch.target.y..")")
+            end
 end
 local spawnWitch = function()
     world:addEntity({
@@ -188,9 +198,9 @@ local spawnWitch = function()
       boundingBox = {},
       phases = {transitions = {witchPhase1Transition}, functions = {witchPhase1}},
       boss = {},
-      witch = {freq = 6, amp = 5},
+      witch = {freq = 6, amp = 5, target = nil},
       timers = {maxTimes = {1,2}, timers = {1,2}},
-      velocity = {},
+      velocity = {maxSpeed = 1000},
       collideObject = {
         type = {"actor", "witch"},
         shape = HC.rectangle(300, 300, 10, 10),

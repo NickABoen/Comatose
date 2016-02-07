@@ -129,6 +129,9 @@ world:addSystem("movement", {
            local vec = entity.velocity.vec
            local speed = entity.velocity.currentSpeed
            position.pos = position.pos + (vec * speed * dt)
+           if entity.witch ~= nil then
+            printNotice("velocity = ("..tostring(entity.velocity.vec.x)..", "..tostring(entity.velocity.vec.y)..")")
+           end
         end
         for entity in pairs(world:query("position collideObject")) do
           local bx, by, bx2, by2 = entity.collideObject.shape:bbox()
