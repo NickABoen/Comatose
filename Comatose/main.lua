@@ -21,6 +21,7 @@ end
 
 --read in the worlds
 local leadinWorld = require('leadin/leadin')
+local menuWorld = require('menu/menu')
 
 --make the game states (ensure these are global)
 --here is the code for the leadin
@@ -41,12 +42,28 @@ function leadin:draw()
   love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
 end
 --next other things could come
+menu = {}
+function menu:update(dt)
+  menuWorld:update(dt)
+end
+local hospitalImg = love.graphics.newImage('images/Hospital.png')
+function menu:draw()
+  cam:attach()
+  menuWorld:draw()
+  cam:detach()
+end
+function menu:keyreleased(key, code)
+    if key == 'return' then
+        Gamestate.switch(leadin)
+    end
+end
 
 function love.load()
   printNotice('Trace system online.', trace.styles.green)
-  cam = Camera(100, 100)
-  cam:zoom(2.5)
+  local width, height = love.graphics.getDimensions()
+  cam = Camera(width/8 + 10, height/8 + 10)
+  cam:zoom(3.75)
   --init the game states
   Gamestate.registerEvents()
-  Gamestate.switch(leadin)
+  Gamestate.switch(menu)
 end
