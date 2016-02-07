@@ -16,9 +16,9 @@ world:addComponent("velocity", { maxSpeed = 100, currentSpeed = 100, vec = vecto
 world:addComponent("boundingBox", {width = 10, height = 10})
 world:addComponent("hasInput", {})
 world:addComponent("player", {state = player_states.neutral})
-world:addComponent("witch", {state = player_states.neutral})
+--world:addComponent("witch", {state = player_states.neutral})
 world:addComponent("debug",{ name = ''})
-world:addComponent("renderable",{z = 0, draw = function() end})
+world:addComponent("renderable",{z = 0, draw = function() end,  hud = false})
 world:addComponent("collideObject", {type = {}, shape = HC.rectangle(200, 200, 10, 10), event = function() end})
 world:addComponent("collideWorld", {type = {}, world = HC.new(), objects = {}})
 world:addComponent("health", {value = 0, min = 0, max = 1500})
@@ -94,6 +94,7 @@ local player = world:addEntity({
       end
     }
 })
+--]]
 
 local layers, tiles, boxes = Loader.load('Maps', 'leadin')
 --add the map
@@ -134,6 +135,7 @@ local mapBox = world:addEntity({collideWorld = {
 for k, box in pairs(boxes) do
   addShape(mapBox, box)
 end
+
 local candyLand = world:addEntity({collideWorld = {
   type = {player=true}
 }})

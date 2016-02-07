@@ -2,6 +2,7 @@
 local world = ...
 
 Player = GetInstance ("animations/PlayerSprite.lua")
+Witch = GetInstance ("animations/WitchSprite.lua")
 
 local function addInteractable(collider, obj)
   collider.collideWorld.objects[obj.collideObject.shape] = obj
@@ -181,7 +182,53 @@ world:addSystem("render", {
         --print(#rens)
         --now draw all of them
         for i, entity in ipairs(rens) do
+          if entity.renderable.hud then cam:detach() end
           entity.renderable.draw(entity)
+          if entity.renderable.hud then cam:attach() end
+        end
+    end
+})
+
+--add a "timer" system with an update callback
+-- this system updates all registered timers each tick
+world:addSystem("timer",{
+    update = function(self, dt)
+        for entity in pairs(world:query("timers")) do
+            for i in ipairs(entity.timers.maxTimes) do
+                local maxTime = entity.timers.maxTimes[i]
+                local timers = entity.timers 
+                timers.timers[i] = timers.timers[i] - dt
+
+                if timers.timers[i] < 0 then
+                    timers.timers[i] = 0
+                end
+            end
+        end
+    end
+})
+
+--add a "ai" system with an update callback
+-- this system handles the calls to an enemy logic update
+world:addSystem("ai", {
+    update = function(self, dt)
+        for entity in pairs(world:query("phases boss")) do
+            local bossState = entity.boss
+            local phases = entity.phases
+
+            printDebug("ai system boss state = "..bossState.state)
+
+            if bossState.state == boss_states.transPhase then
+                phases.transitions[phases.current](entity)
+            else
+               local newPhase = phases.transitions[phases.current](entity)
+
+                if newPhase == phases.current then -- No need to change Phases
+                    phases.functions[phases.current](entity, dt)
+                else -- Phases didn't match so it's time to shift
+                    phases.current = newPhase
+                    bossState.state = boss_states.transPhase
+                end
+            end
         end
     end
 })

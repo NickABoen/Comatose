@@ -1,8 +1,9 @@
 --------------------------------------------------
 --                    Comatose                  --
 --------------------------------------------------
-debug = true
+local debug = true 
 
+timer = require('hump/timer')
 Gamestate = require('hump/gamestate')
 Camera = require('hump/camera')
 vector = require('hump/vector')
@@ -57,10 +58,6 @@ function pushtest:draw()
   trace.draw()
   printFPS()
   local player = getPlayer(testWorld)
-  love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
-  love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
-  love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
-  love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
 end
 --next other things could come
 menu = {}
@@ -79,6 +76,14 @@ function menu:keyreleased(key, code)
     end
 end
 
+-- useful "enums"
+player_states = {neutral = "neutral", rolling = "rolling"}
+key_states = {up = 'up', down = 'down', pressed = 'pressed', released = 'released'}
+boss_states = {preparing = 'preparing', telling = 'telling', attacking = 'attacking', 
+                idle = 'idle', transPhase = 'transPhase'}
+timer_states = {stop = 'stop', restart = 'restart'}
+witch_timers = {floatTimer = 1, stateTimer = 2}
+
 level_1_1 = {}
 function level_1_1:update(dt)
   level_1_1World:update(dt)
@@ -89,11 +94,6 @@ function level_1_1:draw()
   cam:detach()
   trace.draw()
   printFPS()
-  local player = getPlayer(level_1_1World)
-  love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
-  love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
-  love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
-  love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
 end
 
 level_1_2 = {}
@@ -106,13 +106,6 @@ function level_1_2:draw()
   cam:detach()
   trace.draw()
   printFPS()
-  local player = getPlayer(level_1_2World)
-  love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
-  love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
-  love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
-  love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
-  love.graphics.printf("x: " .. player.position.pos.x, 0, 100, love.graphics.getWidth(), 'right')
-  love.graphics.printf("y: " .. player.position.pos.y, 0, 120, love.graphics.getWidth(), 'right')
 end
 
 level_1_3 = {}
@@ -126,10 +119,6 @@ function level_1_3:draw()
   trace.draw()
   printFPS()
   local player = getPlayer(level_1_3World)
-  love.graphics.printf("health: " .. player.health.value, 0, 20, love.graphics.getWidth(), 'right')
-  love.graphics.printf("hunger: " .. player.hunger.value, 0, 40, love.graphics.getWidth(), 'right')
-  love.graphics.printf("glucose: " .. player.glucose.value, 0, 60, love.graphics.getWidth(), 'right')
-  love.graphics.printf("insulin: " .. player.insulin.value, 0, 80, love.graphics.getWidth(), 'right')
 end
 
 function love.load()
@@ -143,5 +132,5 @@ function love.load()
   cam.smoother = Camera.smooth.linear(1000)
   --init the game states
   Gamestate.registerEvents()
-  Gamestate.switch(menu)
+  Gamestate.switch(level_1_1)
 end
